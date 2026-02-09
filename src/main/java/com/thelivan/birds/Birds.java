@@ -17,7 +17,7 @@ public class Birds {
 
     public static final Logger LOG = LogManager.getLogger(MODID);
 
-    @SidedProxy(clientSide = "com.myname.mymodid.ClientProxy", serverSide = "com.myname.mymodid.CommonProxy")
+    @SidedProxy(clientSide = "com.thelivan.birds.client.ClientProxy", serverSide = "com.thelivan.birds.CommonProxy")
     public static CommonProxy proxy;
 
     @Mod.EventHandler

@@ -8,7 +8,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 public class CommonProxy {
 
     public void preInit(FMLPreInitializationEvent ev) {
-        
+
     }
 
     public void init(FMLInitializationEvent ev) {}
