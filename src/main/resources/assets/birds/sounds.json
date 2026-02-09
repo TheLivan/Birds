@@ -1,0 +1,11 @@
+{
+	"ambient.after_great_war": {
+		"category": "ambient",
+		"sounds": [
+			{
+				"name": "after_great_war",
+				"stream": true
+			}
+		]
+	}
+}
