@@ -1,14 +1,17 @@
 package com.thelivan.birds.client.render;
 
-import com.thelivan.birds.Birds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
+
 import org.lwjgl.opengl.GL11;
 
+import com.thelivan.birds.Birds;
+
 public class RenderBird {
+
     static Minecraft MC = Minecraft.getMinecraft();
 
     static final ResourceLocation BIRD_1 = new ResourceLocation(Birds.MODID, "textures/bird_1.png");
@@ -33,15 +36,10 @@ public class RenderBird {
         GL11.glPopMatrix();
     }
 
-    static void draw(
-        ResourceLocation texture,
-        double textureX,
-        double textureY,
-        double width,
-        double height,
-        float alpha
-    ) {
-        MC.getTextureManager().bindTexture(texture);
+    static void draw(ResourceLocation texture, double textureX, double textureY, double width, double height,
+        float alpha) {
+        MC.getTextureManager()
+            .bindTexture(texture);
         GL11.glColor4f(1.0f, 1.0f, 1.0f, alpha);
         Tessellator tes = Tessellator.instance;
         tes.startDrawingQuads();

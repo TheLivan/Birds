@@ -1,15 +1,17 @@
 package com.thelivan.birds.client;
 
-import com.thelivan.birds.client.render.RenderBird;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import com.thelivan.birds.client.render.RenderBird;
+
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class ClientEventHandler {
 
@@ -30,9 +32,7 @@ public class ClientEventHandler {
                     rnd.nextInt(10),
                     (int) MC.thePlayer.posX + (rnd.nextInt(100) - 50),
                     (int) MC.thePlayer.posY + 40,
-                    (int) MC.thePlayer.posZ + (rnd.nextInt(100) - 50)
-                )
-            );
+                    (int) MC.thePlayer.posZ + (rnd.nextInt(100) - 50)));
         }
     }
 

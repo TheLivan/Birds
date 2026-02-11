@@ -1,6 +1,7 @@
 package com.thelivan.birds.client;
 
 public class BirdPos {
+
     private final int x, y, z;
     private final int texture;
 
