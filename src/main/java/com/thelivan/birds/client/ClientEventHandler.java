@@ -31,7 +31,7 @@ public class ClientEventHandler {
                 new BirdPos(
                     rnd.nextInt(10),
                     (int) MC.thePlayer.posX + (rnd.nextInt(100) - 50),
-                    (int) MC.thePlayer.posY + 40,
+                    (int) MC.thePlayer.posY + 5,
                     (int) MC.thePlayer.posZ + (rnd.nextInt(100) - 50)));
         }
     }
