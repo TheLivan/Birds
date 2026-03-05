@@ -15,9 +15,9 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class ClientEventHandler {
 
-    static ClientEventHandler INSTANCE = new ClientEventHandler();
-    static Minecraft MC = Minecraft.getMinecraft();
-    static Random rnd = new Random();
+    static final ClientEventHandler INSTANCE = new ClientEventHandler();
+    static final Minecraft MC = Minecraft.getMinecraft();
+    static final Random rnd = new Random();
 
     RenderBird renderBird = new RenderBird();
     List<BirdPos> birdPosList = new ArrayList<>();
