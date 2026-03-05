@@ -16,28 +16,36 @@ public class RenderBird {
 
     static final ResourceLocation BIRD_1 = new ResourceLocation(Birds.MODID, "textures/bird_1.png");
     static final ResourceLocation BIRD_2 = new ResourceLocation(Birds.MODID, "textures/bird_2.png");
+    static final ResourceLocation BIRD_3 = new ResourceLocation(Birds.MODID, "textures/bird_3.png");
+    static final ResourceLocation BIRD_4 = new ResourceLocation(Birds.MODID, "textures/bird_4.png");
+    static final ResourceLocation BIRD_5 = new ResourceLocation(Birds.MODID, "textures/bird_5.png");
 
     public void render(float x, float y, float z, float birdX, float birdY, float birdZ) {
         GL11.glPushMatrix();
         GL11.glTranslated(-x, -y, -z);
         GL11.glColor4f(1, 1, 1, 1);
-        GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glEnable(GL11.GL_BLEND);
         OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         GL11.glTranslated(birdX, birdY, birdZ);
-        GL11.glRotatef(-RenderManager.instance.playerViewY, 0F, 1.0F, 0.0F);
-        GL11.glRotatef(-RenderManager.instance.playerViewX, -1F, 0.0F, 0.0F);
-        GL11.glRotatef(180, 0F, 0.0F, 1.0F);
-        GL11.glScaled(0.032f, 0.032f, 0.032f);
-        int birdSize = 80;
-        draw(BIRD_1, -birdSize / 2f, -birdSize, birdSize, birdSize, 1.0f);
+        GL11.glRotatef(90, -1F, 0F, 0F);
+        GL11.glRotatef(180, 0F, 0F, 1F);
+        int birdSize = 1;
+        draw(BIRD_2, -birdSize / 2f, -birdSize, birdSize, birdSize, 1.0f);
+        GL11.glRotatef(180, 1F, 0F, 0F);
+        GL11.glRotatef(180, 0F, 0F, 1F);
+        draw(BIRD_2, -birdSize / 2f, -birdSize, birdSize, birdSize, 1.0f);
         GL11.glDisable(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_LIGHTING);
         GL11.glPopMatrix();
     }
 
-    static void draw(ResourceLocation texture, double textureX, double textureY, double width, double height,
-        float alpha) {
+    static void draw(
+        ResourceLocation texture,
+        double textureX,
+        double textureY,
+        double width,
+        double height,
+        float alpha
+    ) {
         MC.getTextureManager()
             .bindTexture(texture);
         GL11.glColor4f(1.0f, 1.0f, 1.0f, alpha);
