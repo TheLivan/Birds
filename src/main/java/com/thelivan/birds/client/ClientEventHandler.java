@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 import com.thelivan.birds.client.render.RenderBird;
+import com.thelivan.birds.util.BlockPos;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -20,16 +21,15 @@ public class ClientEventHandler {
     static final Random rnd = new Random();
 
     RenderBird renderBird = new RenderBird();
-    List<BirdPos> birdPosList = new ArrayList<>();
+    List<BlockPos> blockPosList = new ArrayList<>();
 
     private ClientEventHandler() {}
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent ev) {
         if (MC.thePlayer != null && MC.thePlayer.ticksExisted % 100 == 0) {
-            birdPosList.add(
-                new BirdPos(
-                    rnd.nextInt(10),
+            blockPosList.add(
+                new BlockPos(
                     (int) MC.thePlayer.posX + (rnd.nextInt(100) - 50),
                     (int) MC.thePlayer.posY + 5,
                     (int) MC.thePlayer.posZ + (rnd.nextInt(100) - 50)));
@@ -44,8 +44,8 @@ public class ClientEventHandler {
         float y = (float) (player.prevPosY + ((player.posY - player.prevPosY) * ev.partialTicks));
         float z = (float) (player.prevPosZ + ((player.posZ - player.prevPosZ) * ev.partialTicks));
 
-        for (BirdPos birdPos : birdPosList) {
-            renderBird.render(x, y, z, birdPos.getX(), birdPos.getY(), birdPos.getZ());
+        for (BlockPos blockPos : blockPosList) {
+            renderBird.render(x, y, z, blockPos.getX(), blockPos.getY(), blockPos.getZ());
         }
     }
 }
