@@ -31,9 +31,20 @@ public final class BirdSpeciesRegistry {
         s.minSpeed = 0.4;
         s.maxSpeed = 0.82;
         s.maxTurnDegPerTick = 4.8;
+        s.noiseStrength = 0.02;
         s.scale = 1.2;
         s.flapAmplitude = 0.045;
         s.flapSpeed = 0.22;
+
+        // Long, wide glides; circles less often and more rarely than harrier/swallow.
+        s.glideMinTicks = 110;
+        s.glideMaxTicks = 260;
+        s.circleMinTicks = 120;
+        s.circleMaxTicks = 320;
+        s.circleRadiusMin = 28.0;
+        s.circleRadiusMax = 120.0;
+        s.patternWeightGlide = 0.7;
+        s.patternWeightCircle = 0.3;
 
         // Eagles are near-solitary: rarely a pair, essentially never a big flock.
         s.flockChancePerCell = 0.07;
@@ -57,9 +68,19 @@ public final class BirdSpeciesRegistry {
         s.minSpeed = 0.34;
         s.maxSpeed = 0.64;
         s.maxTurnDegPerTick = 5.6;
+        s.noiseStrength = 0.03;
         s.scale = 0.7;
         s.flapAmplitude = 0.055;
         s.flapSpeed = 0.26;
+
+        s.glideMinTicks = 70;
+        s.glideMaxTicks = 180;
+        s.circleMinTicks = 80;
+        s.circleMaxTicks = 220;
+        s.circleRadiusMin = 18.0;
+        s.circleRadiusMax = 85.0;
+        s.patternWeightGlide = 0.58;
+        s.patternWeightCircle = 0.42;
 
         s.flockChancePerCell = 0.1;
         s.flockMin = 1;
@@ -84,9 +105,19 @@ public final class BirdSpeciesRegistry {
         s.minSpeed = 0.5;
         s.maxSpeed = 0.78;
         s.maxTurnDegPerTick = 5.5;
+        s.noiseStrength = 0.055;
         s.scale = 0.2;
         s.flapAmplitude = 0.2;
         s.flapSpeed = 0.48;
+
+        s.glideMinTicks = 45;
+        s.glideMaxTicks = 110;
+        s.circleMinTicks = 60;
+        s.circleMaxTicks = 170;
+        s.circleRadiusMin = 10.0;
+        s.circleRadiusMax = 40.0;
+        s.patternWeightGlide = 0.5;
+        s.patternWeightCircle = 0.5;
 
         // Swallows are the flocking species: most spawns are a group, sometimes a big one.
         s.flockChancePerCell = 0.6;

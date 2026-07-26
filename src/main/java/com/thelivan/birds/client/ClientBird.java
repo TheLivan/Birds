@@ -46,12 +46,29 @@ public class ClientBird {
     private int nextFlockCallTick = Integer.MIN_VALUE;
 
     /**
+     * Solo flight pattern: alternates between gliding toward a distant waypoint and circling a fixed center. Unused
+     * while {@link #flockId} is non-zero (flock members steer toward the shared flock heading instead).
+     */
+    private enum Mode {
+        GLIDE,
+        CIRCLE
+    }
+
+    private final Random flightRandom;
+    private Mode mode;
+    private int modeTicksLeft;
+    private Vec3d waypoint;
+    private Vec3d circleCenter;
+    private double circleRadius;
+
+    /**
      * @param world unused by the placeholder tick, kept so the signature matches the original constructor
      */
     public ClientBird(World world, BirdSpecies species, long birdSeed, Vec3d startPos, Vec3d initialDir, double speed) {
         this.species = species;
         this.birdSeed = birdSeed;
         this.callRandom = new Random(birdSeed ^ 0xC411L);
+        this.flightRandom = new Random(birdSeed ^ 0x9E3779B1L);
 
         this.pos = startPos;
         this.prevPos = startPos;
@@ -63,13 +80,15 @@ public class ClientBird {
 
         // pick deterministic texture variation for this bird
         this.texture = (species != null) ? species.pickTexture(birdSeed) : null;
+
+        pickNewMode();
     }
 
     /**
-     * PLACEHOLDER: solo birds do a gentle deterministic turn so orientation, banking and interpolation can be
-     * verified on screen. Flock members (see {@link #flockId}) instead steer toward the flock's shared heading plus
-     * local boids (cohesion/alignment/separation, {@link FlockingRules}). The real behaviour (glide/circle modes,
-     * terrain avoidance) is still ported separately.
+     * Solo birds alternate glide/circle patterns ({@link #tickSoloHeading}); flock members (see {@link #flockId})
+     * instead steer toward the flock's shared heading plus local boids (cohesion/alignment/separation,
+     * {@link FlockingRules}). Terrain/obstacle avoidance is not ported yet — only the altitude band in
+     * {@link #verticalVelocity} keeps birds from flying through the ground.
      *
      * @param flockForward the current flock's shared heading, or {@code null} for solo birds
      * @param neighbors    candidate birds to steer relative to (only same-{@link #flockId} ones are used), or
@@ -90,12 +109,7 @@ public class ClientBird {
         if (flockId != 0L) {
             vel = tickFlockHeading(flockForward, neighbors, maxTurnDeg);
         } else {
-            double phase = (ageTicks + (birdSeed & 255L)) * 0.02;
-            double turnRad = Math.toRadians(maxTurnDeg) * Math.sin(phase);
-
-            double cos = Math.cos(turnRad);
-            double sin = Math.sin(turnRad);
-            vel = new Vec3d(vel.x * cos - vel.z * sin, vel.y, vel.x * sin + vel.z * cos);
+            vel = tickSoloHeading(maxTurnDeg);
         }
 
         if (species != null) {
@@ -156,6 +170,119 @@ public class ClientBird {
         return c.scale(1 - t)
             .add(d.scale(t))
             .normalize();
+    }
+
+    /**
+     * Glide toward a distant waypoint, or circle around a fixed center; switches between the two every
+     * {@code glide/circleMin..MaxTicks}. Altitude is not part of this — {@link #verticalVelocity} handles it
+     * independently every tick.
+     */
+    private Vec3d tickSoloHeading(double maxTurnDeg) {
+        if (modeTicksLeft-- <= 0) pickNewMode();
+
+        Vec3d desired = desiredSoloDirection();
+
+        double noise = (species != null) ? species.noiseStrength : 0.04;
+        desired = desired.add((flightRandom.nextDouble() - 0.5) * noise, 0, (flightRandom.nextDouble() - 0.5) * noise);
+        if (desired.lengthSquared() > 1e-8) desired = desired.normalize();
+
+        Vec3d currentXZ = new Vec3d(vel.x, 0, vel.z);
+        Vec3d currentDir = (currentXZ.lengthSquared() > 1e-8) ? currentXZ.normalize() : desired;
+        Vec3d newDir = limitTurnXZ(currentDir, desired, Math.toRadians(maxTurnDeg));
+
+        double minSpeed = (species != null) ? species.minSpeed : 0.35;
+        double maxSpeed = (species != null) ? species.maxSpeed : 0.6;
+        double targetSpeed = (mode == Mode.CIRCLE) ? lerp(minSpeed, maxSpeed, 0.35) : lerp(minSpeed, maxSpeed, 0.65);
+
+        double speed = currentXZ.length();
+        if (speed < 1e-6) speed = minSpeed;
+        speed = lerp(speed, targetSpeed, 0.03);
+
+        Vec3d scaled = newDir.scale(speed);
+        return new Vec3d(scaled.x, vel.y, scaled.z);
+    }
+
+    private Vec3d desiredSoloDirection() {
+        if (mode == Mode.GLIDE) {
+            Vec3d to = new Vec3d(waypoint.x - pos.x, 0, waypoint.z - pos.z);
+            if (to.lengthSquared() < 16.0) {
+                // reached the waypoint -> pick another one
+                pickGlideWaypoint();
+                to = new Vec3d(waypoint.x - pos.x, 0, waypoint.z - pos.z);
+            }
+            return to.normalize();
+        }
+
+        // CIRCLE: tangent direction around circleCenter, with a gentle correction to stay near circleRadius
+        Vec3d toCenter = new Vec3d(circleCenter.x - pos.x, 0, circleCenter.z - pos.z);
+        Vec3d radial = (toCenter.lengthSquared() > 1e-8) ? toCenter.normalize() : new Vec3d(1, 0, 0);
+
+        boolean clockwise = (birdSeed & 1L) == 0L;
+        Vec3d tangent = clockwise ? new Vec3d(-radial.z, 0, radial.x) : new Vec3d(radial.z, 0, -radial.x);
+
+        double dx = pos.x - circleCenter.x;
+        double dz = pos.z - circleCenter.z;
+        double dist = Math.sqrt(dx * dx + dz * dz);
+        double err = circleRadius - dist;
+        Vec3d correction = radial.scale(-err * 0.02);
+
+        return tangent.add(correction)
+            .normalize();
+    }
+
+    private void pickNewMode() {
+        double weightGlide = (species != null) ? species.patternWeightGlide : 0.55;
+        double weightCircle = (species != null) ? species.patternWeightCircle : 0.45;
+        double sum = weightGlide + weightCircle;
+        if (sum <= 0) {
+            weightGlide = 1.0;
+            sum = 1.0;
+        }
+
+        boolean chooseCircle = flightRandom.nextDouble() * sum >= weightGlide;
+
+        if (chooseCircle) {
+            mode = Mode.CIRCLE;
+            modeTicksLeft = randInt(
+                (species != null) ? species.circleMinTicks : 80,
+                (species != null) ? species.circleMaxTicks : 220);
+            circleRadius = lerp(
+                (species != null) ? species.circleRadiusMin : 16.0,
+                (species != null) ? species.circleRadiusMax : 64.0,
+                flightRandom.nextDouble());
+
+            double ang = flightRandom.nextDouble() * Math.PI * 2.0;
+            circleCenter = new Vec3d(pos.x + Math.cos(ang) * circleRadius, pos.y, pos.z + Math.sin(ang) * circleRadius);
+        } else {
+            mode = Mode.GLIDE;
+            modeTicksLeft = randInt(
+                (species != null) ? species.glideMinTicks : 60,
+                (species != null) ? species.glideMaxTicks : 140);
+            pickGlideWaypoint();
+        }
+    }
+
+    private void pickGlideWaypoint() {
+        Vec3d fwdXZ = new Vec3d(vel.x, 0, vel.z);
+        Vec3d dirXZ = (fwdXZ.lengthSquared() > 1e-8) ? fwdXZ.normalize() : new Vec3d(0, 0, 1);
+
+        double dist = 80 + flightRandom.nextDouble() * 140;
+        double ang = Math.atan2(dirXZ.z, dirXZ.x) + (flightRandom.nextDouble() - 0.5) * Math.toRadians(50);
+
+        double wx = pos.x + Math.cos(ang) * dist;
+        double wz = pos.z + Math.sin(ang) * dist;
+
+        // y is unused: verticalVelocity() drives altitude independently of the glide waypoint.
+        waypoint = new Vec3d(wx, pos.y, wz);
+    }
+
+    private int randInt(int lo, int hi) {
+        if (hi <= lo) return lo;
+        return lo + flightRandom.nextInt(hi - lo + 1);
+    }
+
+    private static double lerp(double a, double b, double t) {
+        return a + (b - a) * t;
     }
 
     /**
