@@ -6,6 +6,7 @@ import java.util.Random;
 
 import net.minecraft.util.ResourceLocation;
 
+import com.thelivan.birds.Birds;
 import com.thelivan.birds.client.sound.BirdCallType;
 
 public class BirdSpecies {
@@ -191,6 +192,97 @@ public class BirdSpecies {
     public BirdSpeciesView viewForTime(boolean isDay) {
         OverrideBlock o = isDay ? day : night;
         return new BirdSpeciesView(this, o);
+    }
+
+    public static Builder builder(String name, String folderName) {
+        return new Builder(name, folderName);
+    }
+
+    /**
+     * Fluent construction of a species: groups the flat field list into named steps and runs
+     * {@link #clampAndFix()} on {@link #build()} so every produced instance is already sane.
+     */
+    public static final class Builder {
+
+        private final BirdSpecies s = new BirdSpecies();
+
+        private Builder(String name, String folderName) {
+            s.name = name;
+            s.folderName = folderName;
+            s.soundKey = folderName;
+            s.textures.add(new ResourceLocation(Birds.MODID, "textures/" + folderName + ".png"));
+        }
+
+        public Builder spawnWeight(double spawnWeight) {
+            s.spawnWeight = spawnWeight;
+            return this;
+        }
+
+        public Builder flight(double minSpeed, double maxSpeed, double maxTurnDegPerTick, double noiseStrength) {
+            s.minSpeed = minSpeed;
+            s.maxSpeed = maxSpeed;
+            s.maxTurnDegPerTick = maxTurnDegPerTick;
+            s.noiseStrength = noiseStrength;
+            return this;
+        }
+
+        public Builder altitude(double minAboveGround, double maxAboveGround, double preferredAboveGround,
+            double verticalAdjustStrength) {
+            s.minAltitudeAboveGround = minAboveGround;
+            s.maxAltitudeAboveGround = maxAboveGround;
+            s.preferredAboveGround = preferredAboveGround;
+            s.verticalAdjustStrength = verticalAdjustStrength;
+            return this;
+        }
+
+        public Builder pattern(int glideMinTicks, int glideMaxTicks, int circleMinTicks, int circleMaxTicks,
+            double circleRadiusMin, double circleRadiusMax, double patternWeightGlide, double patternWeightCircle) {
+            s.glideMinTicks = glideMinTicks;
+            s.glideMaxTicks = glideMaxTicks;
+            s.circleMinTicks = circleMinTicks;
+            s.circleMaxTicks = circleMaxTicks;
+            s.circleRadiusMin = circleRadiusMin;
+            s.circleRadiusMax = circleRadiusMax;
+            s.patternWeightGlide = patternWeightGlide;
+            s.patternWeightCircle = patternWeightCircle;
+            return this;
+        }
+
+        public Builder flock(int birdsPerCellMax, double flockChancePerCell, int flockMin, int flockMax,
+            double bigFlockChanceDay, double bigFlockChanceNight, int bigFlockMin, int bigFlockMax) {
+            s.birdsPerCellMax = birdsPerCellMax;
+            s.flockChancePerCell = flockChancePerCell;
+            s.flockMin = flockMin;
+            s.flockMax = flockMax;
+            s.bigFlockChanceDay = bigFlockChanceDay;
+            s.bigFlockChanceNight = bigFlockChanceNight;
+            s.bigFlockMin = bigFlockMin;
+            s.bigFlockMax = bigFlockMax;
+            return this;
+        }
+
+        public Builder render(double scale, double flapAmplitude, double flapSpeed) {
+            s.scale = scale;
+            s.flapAmplitude = flapAmplitude;
+            s.flapSpeed = flapSpeed;
+            return this;
+        }
+
+        public Builder sound(SoundSettings single, SoundSettings flock) {
+            s.soundSingle = single;
+            s.soundFlock = flock;
+            return this;
+        }
+
+        public Builder silent() {
+            s.soundsEnabled = false;
+            return this;
+        }
+
+        public BirdSpecies build() {
+            s.clampAndFix();
+            return s;
+        }
     }
 
     public static class OverrideBlock {
@@ -484,6 +576,20 @@ public class BirdSpecies {
 
         // NEW: ± variation as a fraction (0.05 = ±5%)
         public double soundPitchVariation = 0.05;
+
+        public static SoundSettings of(double pitch, double volume, int intervalTicks, double randomness,
+            double maxDistance, double fadeStart, double fadePower, double pitchVariation) {
+            SoundSettings ss = new SoundSettings();
+            ss.soundPitch = pitch;
+            ss.soundVolume = volume;
+            ss.soundBaseIntervalTicks = intervalTicks;
+            ss.soundRandomness = randomness;
+            ss.soundMaxDistance = maxDistance;
+            ss.soundFadeStart = fadeStart;
+            ss.soundFadePower = fadePower;
+            ss.soundPitchVariation = pitchVariation;
+            return ss;
+        }
 
         public SoundSettings copy() {
             SoundSettings s = new SoundSettings();
