@@ -7,6 +7,8 @@ import java.util.Random;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.BiomeGenBase;
 
+import com.thelivan.birds.client.sound.BirdCallType;
+
 public class BirdSpecies {
 
     public transient String folderName = "unknown";
@@ -308,17 +310,9 @@ public class BirdSpecies {
         }
 
         /**
-         * Backward-compat: existing code that calls v.soundPitch()/soundVolume() should behave like SINGLE.
-         * (So other parts of your mod won’t break.)
+         * Per-type sound view (SINGLE vs FLOCK).
          */
-        /*public double soundPitch() {
-            return sound(BirdCallType.SINGLE).soundPitch();
-        }
-
-        /**
-         * NEW: per-type sound view
-         */
-        /*public SoundView sound(BirdCallType type) {
+        public SoundView sound(BirdCallType type) {
             if (type == BirdCallType.FLOCK) {
                 SoundOverride ov = (o.soundFlock != null) ? o.soundFlock : null;
                 return new SoundView(base.soundFlock, ov);
@@ -327,7 +321,14 @@ public class BirdSpecies {
             // SINGLE: allow legacy day/night override fields as a fallback if soundSingle override block is missing
             SoundOverride ov = (o.soundSingle != null) ? o.soundSingle : legacySingleOverride(o);
             return new SoundView(base.soundSingle, ov);
-        }*/
+        }
+
+        /**
+         * Backward-compat: existing code that calls v.soundPitch()/soundVolume() should behave like SINGLE.
+         */
+        public double soundPitch() {
+            return sound(BirdCallType.SINGLE).soundPitch();
+        }
 
         private static SoundOverride legacySingleOverride(OverrideBlock o) {
             if (o == null) return null;
@@ -354,7 +355,7 @@ public class BirdSpecies {
             return so;
         }
 
-        /*public double soundVolume() {
+        public double soundVolume() {
             return sound(BirdCallType.SINGLE).soundVolume();
         }
 
@@ -380,7 +381,7 @@ public class BirdSpecies {
 
         public double soundPitchVariation() {
             return sound(BirdCallType.SINGLE).soundPitchVariation();
-        }*/
+        }
 
         // Spawn
         public double spawnWeight() {
