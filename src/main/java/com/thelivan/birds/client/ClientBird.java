@@ -3,7 +3,9 @@ package com.thelivan.birds.client;
 import java.util.List;
 import java.util.Random;
 
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
 import com.thelivan.birds.client.sound.BirdCallType;
@@ -81,6 +83,8 @@ public class ClientBird {
             vel = tickSoloHeading(maxTurnDeg);
         }
 
+        vel = avoidObstacles(world, maxTurnDeg);
+
         if (species != null) {
             double vy = verticalVelocity(world, species.viewForTime(world.isDaytime()));
             vel = new Vec3d(vel.x, vy, vel.z);
@@ -134,6 +138,31 @@ public class ClientBird {
         return c.scale(1 - t)
             .add(d.scale(t))
             .normalize();
+    }
+
+    private static final double OBSTACLE_LOOKAHEAD = 16.0;
+
+    // Steer side is fixed per bird (seeded), not picked by which way is actually clearer.
+    private Vec3d avoidObstacles(World world, double maxTurnDeg) {
+        Vec3d dirXZ = new Vec3d(vel.x, 0, vel.z);
+        if (dirXZ.lengthSquared() < 1e-6) return vel;
+        dirXZ = dirXZ.normalize();
+
+        Vec3 start = Vec3.createVectorHelper(pos.x, pos.y, pos.z);
+        Vec3d ahead = pos.add(dirXZ.scale(OBSTACLE_LOOKAHEAD));
+        Vec3 end = Vec3.createVectorHelper(ahead.x, ahead.y, ahead.z);
+
+        MovingObjectPosition hit = world.rayTraceBlocks(start, end);
+        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return vel;
+
+        boolean steerLeft = (birdSeed & 2L) == 0L;
+        Vec3d side = steerLeft ? new Vec3d(-dirXZ.z, 0, dirXZ.x) : new Vec3d(dirXZ.z, 0, -dirXZ.x);
+        Vec3d avoidDir = dirXZ.add(side.scale(0.8)).normalize();
+
+        Vec3d newDir = limitTurnXZ(dirXZ, avoidDir, Math.toRadians(maxTurnDeg * 1.25));
+
+        Vec3d scaled = newDir.scale(new Vec3d(vel.x, 0, vel.z).length());
+        return new Vec3d(scaled.x, vel.y, scaled.z);
     }
 
     private Vec3d tickSoloHeading(double maxTurnDeg) {
@@ -251,8 +280,7 @@ public class ClientBird {
         double maxAbove = view.maxAltitudeAboveGround();
         double preferredAbove = clamp(view.preferredAboveGround(), minAbove, maxAbove);
 
-        // Cruise target follows the ground right below; the hard floor looks ahead so a climb starts before a
-        // rising slope/cliff, not after.
+        // floor looks ahead (climbs before a slope, not after); target/ceiling follow the ground right below
         double floorY = groundAheadY + minAbove;
         double ceilingY = groundHereY + maxAbove;
         double targetY = groundHereY + preferredAbove;

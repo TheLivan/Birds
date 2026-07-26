@@ -13,12 +13,9 @@ import com.thelivan.birds.client.BirdSpecies;
 import com.thelivan.birds.client.ClientBird;
 
 /**
- * Dispatches and tracks the currently-playing bird call sounds.
- * <p>
- * Species sounds are declared once in {@code assets/birds/sounds.json} as ordinary events (one per
- * {@code <folderName>.<single|flock>}); vanilla's own sound engine already does weighted-random pool selection for
- * us, so this class only has to decide *when* a bird is allowed to start a call and keep a single active sound per
- * bird so a fast-repeating species can't stack calls on top of itself.
+ * Dispatches and tracks currently-playing bird calls; vanilla's sound engine already does weighted-random pool
+ * selection over the {@code assets/birds/sounds.json} events, so this only decides *when* a bird may call and keeps
+ * a single active sound per bird.
  */
 public final class BirdSoundSystem {
 

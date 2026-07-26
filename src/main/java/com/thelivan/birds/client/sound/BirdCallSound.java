@@ -8,11 +8,9 @@ import net.minecraft.util.ResourceLocation;
 import com.thelivan.birds.client.ClientBird;
 
 /**
- * A one-shot bird call that follows a {@link ClientBird} and fades with distance.
- * <p>
- * Implements {@link ITickableSound} directly instead of extending {@code PositionedSound}/{@code MovingSound}: those
- * base classes expose several of their fields under unmapped SRG names in this MCP mapping version, so implementing
- * the interface directly keeps every field name under our control.
+ * A one-shot bird call that follows a {@link ClientBird} and fades with distance. Implements {@link ITickableSound}
+ * directly rather than extending {@code PositionedSound}/{@code MovingSound}, whose fields are SRG-named (unmapped)
+ * in this MCP version.
  */
 public class BirdCallSound implements ITickableSound {
 

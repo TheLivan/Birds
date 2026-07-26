@@ -55,7 +55,6 @@ public class RenderBird {
     }
 
     private static void renderOne(Minecraft mc, ClientBird b, Vec3d camPos, float partialTicks) {
-        // --- Interpolate position between ticks ---
         Vec3d p0 = (b.prevPos != null) ? b.prevPos : b.pos;
         Vec3d p1 = b.pos;
 
@@ -126,15 +125,11 @@ public class RenderBird {
         int lightV = (packedLight >>> 16) & 0xFFFF;
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightU, lightV);
 
-        // --- Interpolate angles too (prevents rotation stepping) ---
         float yaw = lerpAngle(b.prevYaw, b.orientation.yawDeg, partialTicks);
         float pitch = lerpAngle(b.prevPitch, b.orientation.pitchDeg, partialTicks);
         float roll = lerpAngle(b.prevRoll, b.orientation.rollDeg, partialTicks);
 
-        // IMPORTANT:
-        // Our "paper plane" quad is in the XZ plane (flat).
-        // forward = +Z (this corresponds to the TOP of the PNG = head)
-        // So yaw rotates around Y, pitch tilts around X (nose up/down), roll banks around Z.
+        // Quad is flat in the XZ plane with forward = +Z (top of the PNG = head).
         GL11.glRotatef(yaw, 0f, 1f, 0f);
         GL11.glRotatef(pitch, 1f, 0f, 0f);
         GL11.glRotatef(roll, 0f, 0f, 1f);
@@ -151,8 +146,6 @@ public class RenderBird {
         double zHead = +halfL;
         double zTail = -halfL;
 
-        // Texture mapping: v=0 at the head (+Z), v=1 at the tail (-Z),
-        // so the TOP of the PNG points forward.
         Tessellator tess = Tessellator.instance;
         tess.startDrawingQuads();
         tess.setColorRGBA_F(1.0f, 1.0f, 1.0f, alpha);
@@ -166,28 +159,21 @@ public class RenderBird {
     }
 
     private static float fogFadeAlpha(Minecraft mc, Vec3d camPos, double wx, double wy, double wz) {
-        // distance from camera to bird
         double dx = wx - camPos.x;
         double dy = wy - camPos.y;
         double dz = wz - camPos.z;
         double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-        // Approximate vanilla-ish fog range from render distance
         double fogEnd = mc.gameSettings.renderDistanceChunks * 16.0;
-
         boolean underwater = mc.thePlayer != null && mc.thePlayer.isInsideOfMaterial(Material.water);
 
-        // Underwater: much shorter visibility
         double fogStart = underwater ? fogEnd * 0.10 : fogEnd * 0.65;
         fogEnd = underwater ? fogEnd * 0.35 : fogEnd;
 
-        // Convert to [0..1] alpha
         double a = (fogEnd - dist) / (fogEnd - fogStart);
         if (a < 0) a = 0;
         if (a > 1) a = 1;
-
-        // Underwater: additionally reduce max alpha a bit (looks like water haze)
-        if (underwater) a *= 0.7;
+        if (underwater) a *= 0.7; // extra haze on top of the shorter range
 
         return (float) a;
     }
