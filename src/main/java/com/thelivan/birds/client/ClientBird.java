@@ -1,6 +1,6 @@
 package com.thelivan.birds.client;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Random;
 
 import net.minecraft.util.MovingObjectPosition;
@@ -65,7 +65,7 @@ public class ClientBird {
         pickNewMode();
     }
 
-    public void tick(World world, Vec3d flockForward, List<ClientBird> neighbors) {
+    public void tick(World world, Vec3d flockForward, Collection<ClientBird> neighbors) {
         if (world == null) return;
 
         prevPos = pos;
@@ -105,7 +105,7 @@ public class ClientBird {
         tickCalls(world);
     }
 
-    private Vec3d tickFlockHeading(Vec3d flockForward, List<ClientBird> neighbors, double maxTurnDeg) {
+    private Vec3d tickFlockHeading(Vec3d flockForward, Collection<ClientBird> neighbors, double maxTurnDeg) {
         Vec3d currentXZ = new Vec3d(vel.x, 0, vel.z);
         double speed = currentXZ.length();
         if (speed < 1e-6) speed = (species != null) ? species.minSpeed : 0.4;

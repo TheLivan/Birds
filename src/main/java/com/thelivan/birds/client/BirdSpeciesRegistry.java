@@ -53,6 +53,7 @@ public final class BirdSpeciesRegistry {
         s.patternWeightCircle = 0.3;
 
         // Eagles are near-solitary: rarely a pair, essentially never a big flock.
+        s.birdsPerCellMax = 2;
         s.flockChancePerCell = 0.07;
         s.flockMin = 1;
         s.flockMax = 2;
@@ -92,6 +93,7 @@ public final class BirdSpeciesRegistry {
         s.patternWeightGlide = 0.58;
         s.patternWeightCircle = 0.42;
 
+        s.birdsPerCellMax = 3;
         s.flockChancePerCell = 0.1;
         s.flockMin = 1;
         s.flockMax = 2;
@@ -134,6 +136,7 @@ public final class BirdSpeciesRegistry {
         s.patternWeightCircle = 0.5;
 
         // Swallows are the flocking species: most spawns are a group, sometimes a big one.
+        s.birdsPerCellMax = 16;
         s.flockChancePerCell = 0.6;
         s.flockMin = 8;
         s.flockMax = 22;
@@ -174,6 +177,7 @@ public final class BirdSpeciesRegistry {
         s.patternWeightGlide = 0.55;
         s.patternWeightCircle = 0.45;
 
+        s.birdsPerCellMax = 7;
         s.flockChancePerCell = 0.55;
         s.flockMin = 4;
         s.flockMax = 12;
@@ -213,6 +217,7 @@ public final class BirdSpeciesRegistry {
         s.patternWeightGlide = 0.76;
         s.patternWeightCircle = 0.24;
 
+        s.birdsPerCellMax = 3;
         s.flockChancePerCell = 0.28;
         s.flockMin = 2;
         s.flockMax = 6;

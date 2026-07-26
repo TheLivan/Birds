@@ -1,6 +1,6 @@
 package com.thelivan.birds.client;
 
-import java.util.List;
+import java.util.Collection;
 
 import com.thelivan.birds.util.Vec3d;
 
@@ -18,7 +18,7 @@ final class FlockingRules {
 
     private FlockingRules() {}
 
-    static Vec3d boidsSteer(ClientBird self, List<ClientBird> candidates) {
+    static Vec3d boidsSteer(ClientBird self, Collection<ClientBird> candidates) {
         Vec3d cohesion = Vec3d.ZERO;
         Vec3d alignment = Vec3d.ZERO;
         Vec3d separation = Vec3d.ZERO;
