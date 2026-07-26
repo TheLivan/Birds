@@ -58,11 +58,6 @@ public class BirdCallSound implements ITickableSound {
 
     @Override
     public void update() {
-        if (bird == null || bird.pos == null) {
-            donePlaying = true;
-            return;
-        }
-
         xPosF = (float) bird.pos.x;
         yPosF = (float) bird.pos.y;
         zPosF = (float) bird.pos.z;
