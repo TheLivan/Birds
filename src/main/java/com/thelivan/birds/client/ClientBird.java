@@ -61,10 +61,7 @@ public class ClientBird {
     private Vec3d circleCenter;
     private double circleRadius;
 
-    /**
-     * @param world unused by the placeholder tick, kept so the signature matches the original constructor
-     */
-    public ClientBird(World world, BirdSpecies species, long birdSeed, Vec3d startPos, Vec3d initialDir, double speed) {
+    public ClientBird(BirdSpecies species, long birdSeed, Vec3d startPos, Vec3d initialDir, double speed) {
         this.species = species;
         this.birdSeed = birdSeed;
         this.callRandom = new Random(birdSeed ^ 0xC411L);
