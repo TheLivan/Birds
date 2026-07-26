@@ -232,10 +232,7 @@ public final class BirdSpeciesRegistry {
         s.name = name;
         s.folderName = folderName;
         s.soundKey = folderName;
-
-        for (int i = 1; i <= 5; i++) {
-            s.textures.add(new ResourceLocation(Birds.MODID, "textures/bird_" + i + ".png"));
-        }
+        s.textures.add(new ResourceLocation(Birds.MODID, "textures/" + folderName + ".png"));
 
         return s;
     }
