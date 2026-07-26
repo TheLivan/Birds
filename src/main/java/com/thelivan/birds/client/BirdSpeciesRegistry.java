@@ -18,9 +18,11 @@ public final class BirdSpeciesRegistry {
     public static final BirdSpecies GOLDEN_EAGLE = goldenEagle();
     public static final BirdSpecies HARRIER = harrier();
     public static final BirdSpecies SWALLOW = swallow();
+    public static final BirdSpecies COMMON_SWIFT = commonSwift();
+    public static final BirdSpecies EURASIAN_GRIFFON = eurasianGriffon();
 
     public static final List<BirdSpecies> ALL = Collections
-        .unmodifiableList(Arrays.asList(GOLDEN_EAGLE, HARRIER, SWALLOW));
+        .unmodifiableList(Arrays.asList(GOLDEN_EAGLE, HARRIER, SWALLOW, COMMON_SWIFT, EURASIAN_GRIFFON));
 
     private BirdSpeciesRegistry() {}
 
@@ -32,6 +34,10 @@ public final class BirdSpeciesRegistry {
         s.maxSpeed = 0.82;
         s.maxTurnDegPerTick = 4.8;
         s.noiseStrength = 0.02;
+        s.minAltitudeAboveGround = 45.0;
+        s.maxAltitudeAboveGround = 64.0;
+        s.preferredAboveGround = 48.0;
+        s.verticalAdjustStrength = 0.0036;
         s.scale = 1.2;
         s.flapAmplitude = 0.045;
         s.flapSpeed = 0.22;
@@ -69,6 +75,10 @@ public final class BirdSpeciesRegistry {
         s.maxSpeed = 0.64;
         s.maxTurnDegPerTick = 5.6;
         s.noiseStrength = 0.03;
+        s.minAltitudeAboveGround = 8.0;
+        s.maxAltitudeAboveGround = 64.0;
+        s.preferredAboveGround = 48.0;
+        s.verticalAdjustStrength = 0.0048;
         s.scale = 0.7;
         s.flapAmplitude = 0.055;
         s.flapSpeed = 0.26;
@@ -106,6 +116,10 @@ public final class BirdSpeciesRegistry {
         s.maxSpeed = 0.78;
         s.maxTurnDegPerTick = 5.5;
         s.noiseStrength = 0.055;
+        s.minAltitudeAboveGround = 8.0;
+        s.maxAltitudeAboveGround = 32.0;
+        s.preferredAboveGround = 12.0;
+        s.verticalAdjustStrength = 0.006;
         s.scale = 0.2;
         s.flapAmplitude = 0.2;
         s.flapSpeed = 0.48;
@@ -130,6 +144,85 @@ public final class BirdSpeciesRegistry {
 
         s.soundSingle = soundSettings(1.0, 0.3, 600, 0.25, 128.0, 2.0, 2.5, 0.07);
         s.soundFlock = soundSettings(1.0, 0.3, 420, 0.0, 128.0, 2.0, 2.5, 0.06);
+
+        return finish(s);
+    }
+
+    private static BirdSpecies commonSwift() {
+        BirdSpecies s = base("Common swift", "common_swift");
+
+        s.spawnWeight = 0.5;
+        s.minSpeed = 0.5;
+        s.maxSpeed = 0.92;
+        s.maxTurnDegPerTick = 7.8;
+        s.noiseStrength = 0.0;
+        s.minAltitudeAboveGround = 28.0;
+        s.maxAltitudeAboveGround = 140.0;
+        s.preferredAboveGround = 12.0;
+        s.verticalAdjustStrength = 0.005;
+        s.scale = 0.3;
+        s.flapAmplitude = 0.07;
+        s.flapSpeed = 0.6;
+
+        // Swifts glide in very long, uninterrupted stretches (minutes, not seconds) compared to the other species.
+        s.glideMinTicks = 2000;
+        s.glideMaxTicks = 3000;
+        s.circleMinTicks = 60;
+        s.circleMaxTicks = 160;
+        s.circleRadiusMin = 14.0;
+        s.circleRadiusMax = 55.0;
+        s.patternWeightGlide = 0.55;
+        s.patternWeightCircle = 0.45;
+
+        s.flockChancePerCell = 0.55;
+        s.flockMin = 4;
+        s.flockMax = 12;
+        s.bigFlockChanceDay = 0.15;
+        s.bigFlockChanceNight = 0.05;
+        s.bigFlockMin = 12;
+        s.bigFlockMax = 26;
+
+        s.soundSingle = soundSettings(1.0, 0.3, 120, 0.25, 96.0, 8.0, 1.8, 0.05);
+        s.soundFlock = soundSettings(1.0, 0.3, 420, 0.5, 96.0, 8.0, 1.8, 0.05);
+
+        return finish(s);
+    }
+
+    private static BirdSpecies eurasianGriffon() {
+        BirdSpecies s = base("Eurasian griffon", "eurasiangriffon");
+
+        s.spawnWeight = 0.22;
+        s.minSpeed = 0.3;
+        s.maxSpeed = 0.6;
+        s.maxTurnDegPerTick = 3.8;
+        s.noiseStrength = 0.018;
+        s.minAltitudeAboveGround = 50.0;
+        s.maxAltitudeAboveGround = 290.0;
+        s.preferredAboveGround = 48.0;
+        s.verticalAdjustStrength = 0.0032;
+        s.scale = 1.37;
+        s.flapAmplitude = 0.032;
+        s.flapSpeed = 0.19;
+
+        s.glideMinTicks = 130;
+        s.glideMaxTicks = 310;
+        s.circleMinTicks = 150;
+        s.circleMaxTicks = 360;
+        s.circleRadiusMin = 36.0;
+        s.circleRadiusMax = 150.0;
+        s.patternWeightGlide = 0.76;
+        s.patternWeightCircle = 0.24;
+
+        s.flockChancePerCell = 0.28;
+        s.flockMin = 2;
+        s.flockMax = 6;
+        s.bigFlockChanceDay = 0.08;
+        s.bigFlockChanceNight = 0.05;
+        s.bigFlockMin = 7;
+        s.bigFlockMax = 16;
+
+        // No .ogg calls exist for this species in the 1.12.2 source either — silent there too.
+        s.soundsEnabled = false;
 
         return finish(s);
     }

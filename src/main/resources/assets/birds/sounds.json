@@ -54,5 +54,22 @@
 			{ "name": "birds:swallow/flock/output2" },
 			{ "name": "birds:swallow/flock/output3" }
 		]
+	},
+	"common_swift.single": {
+		"category": "ambient",
+		"sounds": [
+			{ "name": "birds:common_swift/single/martinetsolo1" },
+			{ "name": "birds:common_swift/single/martinetsolo2" },
+			{ "name": "birds:common_swift/single/martinetsolo3" },
+			{ "name": "birds:common_swift/single/martinetsolo4" }
+		]
+	},
+	"common_swift.flock": {
+		"category": "ambient",
+		"sounds": [
+			{ "name": "birds:common_swift/flock/martinet1" },
+			{ "name": "birds:common_swift/flock/martinet2" },
+			{ "name": "birds:common_swift/flock/martinet3" }
+		]
 	}
 }
