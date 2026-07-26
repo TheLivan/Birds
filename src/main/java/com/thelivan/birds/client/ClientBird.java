@@ -87,8 +87,8 @@ public class ClientBird {
     /**
      * Solo birds alternate glide/circle patterns ({@link #tickSoloHeading}); flock members (see {@link #flockId})
      * instead steer toward the flock's shared heading plus local boids (cohesion/alignment/separation,
-     * {@link FlockingRules}). Terrain/obstacle avoidance is not ported yet — only the altitude band in
-     * {@link #verticalVelocity} keeps birds from flying through the ground.
+     * {@link FlockingRules}). {@link #verticalVelocity} keeps birds within their altitude band and climbs ahead of
+     * rising terrain; there's still no avoidance for discrete obstacles like trees.
      *
      * @param flockForward the current flock's shared heading, or {@code null} for solo birds
      * @param neighbors    candidate birds to steer relative to (only same-{@link #flockId} ones are used), or
@@ -286,21 +286,29 @@ public class ClientBird {
     }
 
     /**
+     * Forward look-ahead distances (blocks) used to keep the altitude floor ahead of a rising slope/cliff instead of
+     * reacting only once the bird is already over it.
+     */
+    private static final double[] TERRAIN_LOOKAHEAD = { 6, 12, 18, 26, 34 };
+
+    /**
      * Steers {@code pos.y} toward {@code ground + preferredAboveGround}, clamped to the species' altitude band, and
-     * forces a climb if it's about to drop below the minimum. Terrain is only sampled directly below the bird (no
-     * forward look-ahead / obstacle avoidance yet), so this keeps birds cruising at a believable height without
-     * porting the full glide/circle/boids flight model.
+     * forces a climb if it's about to drop below the minimum. The cruise target follows the terrain directly below
+     * the bird, but the hard floor is computed from the highest ground sampled along the current flight path, so a
+     * bird approaching a hill/cliff starts climbing before it gets there rather than after. There's still no
+     * avoidance for discrete obstacles (trees, overhangs) — only ground height.
      */
     private double verticalVelocity(World world, BirdSpecies.BirdSpeciesView view) {
-        double groundY = world.getHeightValue((int) Math.floor(pos.x), (int) Math.floor(pos.z));
+        double groundHereY = world.getHeightValue((int) Math.floor(pos.x), (int) Math.floor(pos.z));
+        double groundAheadY = maxGroundAhead(world, groundHereY);
 
         double minAbove = view.minAltitudeAboveGround();
         double maxAbove = view.maxAltitudeAboveGround();
         double preferredAbove = clamp(view.preferredAboveGround(), minAbove, maxAbove);
 
-        double floorY = groundY + minAbove;
-        double ceilingY = groundY + maxAbove;
-        double targetY = groundY + preferredAbove;
+        double floorY = groundAheadY + minAbove;
+        double ceilingY = groundHereY + maxAbove;
+        double targetY = groundHereY + preferredAbove;
 
         // Only bias toward the floor/ceiling once we're close to violating it; otherwise cruise at the preferred band.
         if (pos.y < floorY + 6.0) {
@@ -312,12 +320,31 @@ public class ClientBird {
         double yError = targetY - pos.y;
         double vy = clamp(yError * view.verticalAdjustStrength(), -0.06, 0.06);
 
-        // Hard floor: never let the smoothed climb be too slow to clear the minimum altitude.
+        // Hard floor: never let the smoothed climb be too slow to clear the (look-ahead) minimum altitude.
         if (pos.y + vy < floorY) {
             vy = Math.min(0.12, floorY - pos.y);
         }
 
         return vy;
+    }
+
+    /**
+     * Highest terrain height sampled along the bird's current horizontal heading, {@code fallback} included (so a
+     * stationary/near-zero horizontal velocity just falls back to the ground directly below).
+     */
+    private double maxGroundAhead(World world, double fallback) {
+        Vec3d dirXZ = new Vec3d(vel.x, 0, vel.z);
+        if (dirXZ.lengthSquared() < 1e-6) return fallback;
+        dirXZ = dirXZ.normalize();
+
+        double maxGround = fallback;
+        for (double d : TERRAIN_LOOKAHEAD) {
+            int ax = (int) Math.floor(pos.x + dirXZ.x * d);
+            int az = (int) Math.floor(pos.z + dirXZ.z * d);
+            double g = world.getHeightValue(ax, az);
+            if (g > maxGround) maxGround = g;
+        }
+        return maxGround;
     }
 
     private void tickCalls(World world) {
