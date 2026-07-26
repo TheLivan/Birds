@@ -151,6 +151,8 @@ public class BirdCallSound implements ITickableSound {
 
     @Override
     public ISound.AttenuationType getAttenuationType() {
-        return ISound.AttenuationType.LINEAR;
+        // fadeGain() already computes distance-based volume; NONE stops the engine's own rolloff from compounding
+        // on top of it (which was cutting calls off far closer than maxDist).
+        return ISound.AttenuationType.NONE;
     }
 }
