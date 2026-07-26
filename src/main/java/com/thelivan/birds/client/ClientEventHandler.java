@@ -21,18 +21,14 @@ import com.thelivan.birds.util.Vec3d;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
-/**
- * PLACEHOLDER driver that keeps a handful of birds alive around the player so the renderer can be verified.
- * It is replaced by the ported BirdManager + FlockSpawner once the full spawning logic (per-cell density, biomes)
- * lands.
- */
 public class ClientEventHandler {
 
     static final ClientEventHandler INSTANCE = new ClientEventHandler();
     static final Minecraft MC = Minecraft.getMinecraft();
     static final Random rnd = new Random();
 
-    private static final int TARGET_BIRD_COUNT = 20;
+    // Above the largest single flock (swallow big flock: up to 55) so spawnFlock() doesn't cut one short.
+    private static final int TARGET_BIRD_COUNT = 48;
     private static final int SPAWN_RADIUS = 80;
     private static final double DESPAWN_BORDER_BUFFER = 32.0;
 
@@ -84,7 +80,7 @@ public class ClientEventHandler {
 
         while (birds.size() < TARGET_BIRD_COUNT) {
             BirdSpecies species = pickSpecies(world);
-            if (species == null) break; // nobody is allowed to spawn right now (e.g. every species is day-only, and it's night)
+            if (species == null) break; // no species allowed to spawn right now
 
             if (rnd.nextDouble() < species.flockChancePerCell) {
                 spawnFlock(world, player, species);
@@ -109,7 +105,7 @@ public class ClientEventHandler {
 
         double speed = species.minSpeed + rnd.nextDouble() * (species.maxSpeed - species.minSpeed);
 
-        return new ClientBird(world, species, rnd.nextLong(), new Vec3d(x, y, z), dir, speed);
+        return new ClientBird(species, rnd.nextLong(), new Vec3d(x, y, z), dir, speed);
     }
 
     private void spawnFlock(World world, EntityPlayer player, BirdSpecies species) {
@@ -130,7 +126,8 @@ public class ClientEventHandler {
 
         int size = chooseFlockSize(world, species);
 
-        for (int i = 0; i < size && birds.size() < TARGET_BIRD_COUNT; i++) {
+        // Not capped by TARGET_BIRD_COUNT: letting a flock finish in full matters more than the exact count.
+        for (int i = 0; i < size; i++) {
             double spread = (size <= 10) ? (3.0 + rnd.nextDouble() * 8.0) : (6.0 + rnd.nextDouble() * 18.0);
             double a = rnd.nextDouble() * Math.PI * 2.0;
             Vec3d offset = new Vec3d(Math.cos(a) * spread, (rnd.nextDouble() - 0.5) * 3.0, Math.sin(a) * spread);
@@ -141,7 +138,7 @@ public class ClientEventHandler {
                 .normalize();
             double speed = baseSpeed * (0.9 + rnd.nextDouble() * 0.2);
 
-            ClientBird bird = new ClientBird(world, species, rnd.nextLong(), pos, dir, speed);
+            ClientBird bird = new ClientBird(species, rnd.nextLong(), pos, dir, speed);
             bird.flockId = flockId;
             birds.add(bird);
         }

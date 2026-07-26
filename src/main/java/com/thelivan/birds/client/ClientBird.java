@@ -11,20 +11,10 @@ import com.thelivan.birds.client.sound.BirdSoundSystem;
 import com.thelivan.birds.client.util.BirdOrientation;
 import com.thelivan.birds.util.Vec3d;
 
-/**
- * A single client-side bird.
- * <p>
- * Fields and signatures are kept identical to the 1.12.2 original so that porting the real flight logic later only
- * replaces the body of {@link #tick(World, Vec3d, List)}.
- */
 public class ClientBird {
 
     public final BirdSpecies species;
     public final BirdOrientation orientation = new BirdOrientation();
-
-    /**
-     * Deterministic chosen texture for this bird
-     */
     public final ResourceLocation texture;
 
     private final long birdSeed;
@@ -36,19 +26,12 @@ public class ClientBird {
     public Vec3d prevPos;
     public float prevYaw, prevPitch, prevRoll;
 
-    /**
-     * used for banking (roll)
-     */
     private Vec3d lastForwardXZ = new Vec3d(0, 0, 1);
 
     private final Random callRandom;
     private int nextSingleCallTick = Integer.MIN_VALUE;
     private int nextFlockCallTick = Integer.MIN_VALUE;
 
-    /**
-     * Solo flight pattern: alternates between gliding toward a distant waypoint and circling a fixed center. Unused
-     * while {@link #flockId} is non-zero (flock members steer toward the shared flock heading instead).
-     */
     private enum Mode {
         GLIDE,
         CIRCLE
@@ -75,22 +58,11 @@ public class ClientBird {
         this.vel = forward.scale(speed);
         this.lastForwardXZ = new Vec3d(forward.x, 0, forward.z).normalize();
 
-        // pick deterministic texture variation for this bird
         this.texture = (species != null) ? species.pickTexture(birdSeed) : null;
 
         pickNewMode();
     }
 
-    /**
-     * Solo birds alternate glide/circle patterns ({@link #tickSoloHeading}); flock members (see {@link #flockId})
-     * instead steer toward the flock's shared heading plus local boids (cohesion/alignment/separation,
-     * {@link FlockingRules}). {@link #verticalVelocity} keeps birds within their altitude band and climbs ahead of
-     * rising terrain; there's still no avoidance for discrete obstacles like trees.
-     *
-     * @param flockForward the current flock's shared heading, or {@code null} for solo birds
-     * @param neighbors    candidate birds to steer relative to (only same-{@link #flockId} ones are used), or
-     *                     {@code null} for solo birds
-     */
     public void tick(World world, Vec3d flockForward, List<ClientBird> neighbors) {
         if (world == null) return;
 
@@ -114,10 +86,9 @@ public class ClientBird {
             vel = new Vec3d(vel.x, vy, vel.z);
         }
 
-        // Banking roll: based on change in forward direction (turning)
         Vec3d fNow = new Vec3d(vel.x, 0, vel.z).normalize();
         Vec3d fPrev = lastForwardXZ;
-        double cross = (fPrev.x * fNow.z) - (fPrev.z * fNow.x); // signed turn amount
+        double cross = (fPrev.x * fNow.z) - (fPrev.z * fNow.x); // signed turn amount, drives banking
         float targetRoll = (float) clamp(-cross * 55.0, -35.0, 35.0);
         orientation.setTargetRoll(targetRoll, 3.0f);
 
@@ -130,10 +101,6 @@ public class ClientBird {
         tickCalls(world);
     }
 
-    /**
-     * Blends the current heading toward the flock's shared direction plus local boids steering, turn-rate limited
-     * like the solo path. Speed magnitude is preserved; only the horizontal direction changes here.
-     */
     private Vec3d tickFlockHeading(Vec3d flockForward, List<ClientBird> neighbors, double maxTurnDeg) {
         Vec3d currentXZ = new Vec3d(vel.x, 0, vel.z);
         double speed = currentXZ.length();
@@ -169,11 +136,6 @@ public class ClientBird {
             .normalize();
     }
 
-    /**
-     * Glide toward a distant waypoint, or circle around a fixed center; switches between the two every
-     * {@code glide/circleMin..MaxTicks}. Altitude is not part of this — {@link #verticalVelocity} handles it
-     * independently every tick.
-     */
     private Vec3d tickSoloHeading(double maxTurnDeg) {
         if (modeTicksLeft-- <= 0) pickNewMode();
 
@@ -203,14 +165,12 @@ public class ClientBird {
         if (mode == Mode.GLIDE) {
             Vec3d to = new Vec3d(waypoint.x - pos.x, 0, waypoint.z - pos.z);
             if (to.lengthSquared() < 16.0) {
-                // reached the waypoint -> pick another one
                 pickGlideWaypoint();
                 to = new Vec3d(waypoint.x - pos.x, 0, waypoint.z - pos.z);
             }
             return to.normalize();
         }
 
-        // CIRCLE: tangent direction around circleCenter, with a gentle correction to stay near circleRadius
         Vec3d toCenter = new Vec3d(circleCenter.x - pos.x, 0, circleCenter.z - pos.z);
         Vec3d radial = (toCenter.lengthSquared() > 1e-8) ? toCenter.normalize() : new Vec3d(1, 0, 0);
 
@@ -269,8 +229,7 @@ public class ClientBird {
         double wx = pos.x + Math.cos(ang) * dist;
         double wz = pos.z + Math.sin(ang) * dist;
 
-        // y is unused: verticalVelocity() drives altitude independently of the glide waypoint.
-        waypoint = new Vec3d(wx, pos.y, wz);
+        waypoint = new Vec3d(wx, pos.y, wz); // y unused, verticalVelocity() drives altitude on its own
     }
 
     private int randInt(int lo, int hi) {
@@ -282,19 +241,8 @@ public class ClientBird {
         return a + (b - a) * t;
     }
 
-    /**
-     * Forward look-ahead distances (blocks) used to keep the altitude floor ahead of a rising slope/cliff instead of
-     * reacting only once the bird is already over it.
-     */
     private static final double[] TERRAIN_LOOKAHEAD = { 6, 12, 18, 26, 34 };
 
-    /**
-     * Steers {@code pos.y} toward {@code ground + preferredAboveGround}, clamped to the species' altitude band, and
-     * forces a climb if it's about to drop below the minimum. The cruise target follows the terrain directly below
-     * the bird, but the hard floor is computed from the highest ground sampled along the current flight path, so a
-     * bird approaching a hill/cliff starts climbing before it gets there rather than after. There's still no
-     * avoidance for discrete obstacles (trees, overhangs) — only ground height.
-     */
     private double verticalVelocity(World world, BirdSpecies.BirdSpeciesView view) {
         double groundHereY = world.getHeightValue((int) Math.floor(pos.x), (int) Math.floor(pos.z));
         double groundAheadY = maxGroundAhead(world, groundHereY);
@@ -303,11 +251,12 @@ public class ClientBird {
         double maxAbove = view.maxAltitudeAboveGround();
         double preferredAbove = clamp(view.preferredAboveGround(), minAbove, maxAbove);
 
+        // Cruise target follows the ground right below; the hard floor looks ahead so a climb starts before a
+        // rising slope/cliff, not after.
         double floorY = groundAheadY + minAbove;
         double ceilingY = groundHereY + maxAbove;
         double targetY = groundHereY + preferredAbove;
 
-        // Only bias toward the floor/ceiling once we're close to violating it; otherwise cruise at the preferred band.
         if (pos.y < floorY + 6.0) {
             targetY = Math.max(targetY, floorY + 6.0);
         } else if (pos.y > ceilingY - 6.0) {
@@ -317,7 +266,6 @@ public class ClientBird {
         double yError = targetY - pos.y;
         double vy = clamp(yError * view.verticalAdjustStrength(), -0.06, 0.06);
 
-        // Hard floor: never let the smoothed climb be too slow to clear the (look-ahead) minimum altitude.
         if (pos.y + vy < floorY) {
             vy = Math.min(0.12, floorY - pos.y);
         }
@@ -325,10 +273,6 @@ public class ClientBird {
         return vy;
     }
 
-    /**
-     * Highest terrain height sampled along the bird's current horizontal heading, {@code fallback} included (so a
-     * stationary/near-zero horizontal velocity just falls back to the ground directly below).
-     */
     private double maxGroundAhead(World world, double fallback) {
         Vec3d dirXZ = new Vec3d(vel.x, 0, vel.z);
         if (dirXZ.lengthSquared() < 1e-6) return fallback;
@@ -361,7 +305,6 @@ public class ClientBird {
 
     private int tickCall(BirdCallType type, BirdSpecies.SoundView sound, int tick, int nextCallTick) {
         if (nextCallTick == Integer.MIN_VALUE) {
-            // First check for this call type: stagger the initial call instead of firing on spawn.
             return tick + jitteredInterval(sound);
         }
 

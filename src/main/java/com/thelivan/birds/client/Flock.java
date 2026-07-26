@@ -5,9 +5,8 @@ import java.util.Random;
 import com.thelivan.birds.util.Vec3d;
 
 /**
- * Shared heading for a group of birds with the same {@link ClientBird#flockId}. Occasionally nudges its own
- * direction so the group drifts instead of flying dead straight forever; individual birds blend toward this plus
- * local boids steering (see {@link FlockingRules}).
+ * Shared heading for a group of birds with the same {@link ClientBird#flockId}; occasionally nudges its own
+ * direction so the group doesn't fly dead straight forever.
  */
 final class Flock {
 

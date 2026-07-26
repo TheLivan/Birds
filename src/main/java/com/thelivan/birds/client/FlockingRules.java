@@ -4,11 +4,7 @@ import java.util.List;
 
 import com.thelivan.birds.util.Vec3d;
 
-/**
- * Simple boids (cohesion/alignment/separation) among same-flock neighbors. Constants are shared by every species —
- * the original had a per-call {@code Params} object but always constructed it with the same values, so there was
- * nothing to actually tune per species.
- */
+/** Simple boids (cohesion/alignment/separation) among same-flock neighbors. */
 final class FlockingRules {
 
     private static final double NEIGHBOR_RADIUS = 48.0;
