@@ -35,12 +35,17 @@ public final class BirdSpeciesRegistry {
         s.flapAmplitude = 0.045;
         s.flapSpeed = 0.22;
 
+        // Eagles are near-solitary: rarely a pair, essentially never a big flock.
+        s.flockChancePerCell = 0.07;
+        s.flockMin = 1;
+        s.flockMax = 2;
+        s.bigFlockChanceDay = 0.0;
+        s.bigFlockChanceNight = 0.05;
+        s.bigFlockMin = 0;
+        s.bigFlockMax = 0;
+
         s.soundSingle = soundSettings(1.0, 0.6, 1200, 0.25, 128.0, 8.0, 2.0, 0.05);
         s.soundFlock = soundSettings(1.0, 0.6, 600, 0.5, 128.0, 8.0, 2.0, 0.05);
-
-        s.biomeRules.temperatureCategoryWhitelist = Arrays.asList("COLD", "MEDIUM");
-        s.biomeRules.biomeDictionaryWhitelist = Arrays.asList("MOUNTAIN", "HILLS", "COLD");
-        s.biomeRules.biomeDictionaryBlacklist = Arrays.asList("NETHER", "END", "OCEAN", "HOT");
 
         return finish(s);
     }
@@ -56,13 +61,18 @@ public final class BirdSpeciesRegistry {
         s.flapAmplitude = 0.055;
         s.flapSpeed = 0.26;
 
+        s.flockChancePerCell = 0.1;
+        s.flockMin = 1;
+        s.flockMax = 2;
+        s.bigFlockChanceDay = 0.0;
+        s.bigFlockChanceNight = 0.05;
+        s.bigFlockMin = 0;
+        s.bigFlockMax = 0;
+
         // The 1.12.2 source shipped .ogg calls for this species but never defined sound settings for it;
         // these are new, tuned to sit between the eagle and the swallow.
         s.soundSingle = soundSettings(1.0, 0.5, 500, 0.3, 100.0, 6.0, 1.8, 0.06);
         s.soundFlock = soundSettings(1.0, 0.5, 260, 0.4, 100.0, 6.0, 1.8, 0.06);
-
-        s.biomeRules.biomeDictionaryWhitelist = Arrays.asList("SWAMP", "WET", "PLAINS", "RIVER");
-        s.biomeRules.biomeDictionaryBlacklist = Arrays.asList("NETHER", "END", "OCEAN", "MOUNTAIN");
 
         return finish(s);
     }
@@ -78,11 +88,17 @@ public final class BirdSpeciesRegistry {
         s.flapAmplitude = 0.2;
         s.flapSpeed = 0.48;
 
+        // Swallows are the flocking species: most spawns are a group, sometimes a big one.
+        s.flockChancePerCell = 0.6;
+        s.flockMin = 8;
+        s.flockMax = 22;
+        s.bigFlockChanceDay = 0.3;
+        s.bigFlockChanceNight = 0.2;
+        s.bigFlockMin = 25;
+        s.bigFlockMax = 55;
+
         s.soundSingle = soundSettings(1.0, 0.3, 600, 0.25, 128.0, 2.0, 2.5, 0.07);
         s.soundFlock = soundSettings(1.0, 0.3, 420, 0.0, 128.0, 2.0, 2.5, 0.06);
-
-        s.biomeRules.biomeDictionaryWhitelist = Arrays.asList("PLAINS", "RIVER", "FOREST", "SWAMP");
-        s.biomeRules.biomeDictionaryBlacklist = Arrays.asList("NETHER", "END", "OCEAN");
 
         return finish(s);
     }
@@ -115,7 +131,6 @@ public final class BirdSpeciesRegistry {
     }
 
     private static BirdSpecies finish(BirdSpecies s) {
-        BiomeRuleResolver.resolve(s);
         s.clampAndFix();
         return s;
     }

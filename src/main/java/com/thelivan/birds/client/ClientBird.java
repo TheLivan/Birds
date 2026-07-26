@@ -1,5 +1,6 @@
 package com.thelivan.birds.client;
 
+import java.util.List;
 import java.util.Random;
 
 import net.minecraft.util.ResourceLocation;
@@ -14,7 +15,7 @@ import com.thelivan.birds.util.Vec3d;
  * A single client-side bird.
  * <p>
  * Fields and signatures are kept identical to the 1.12.2 original so that porting the real flight logic later only
- * replaces the body of {@link #tick(World)}.
+ * replaces the body of {@link #tick(World, Vec3d, List)}.
  */
 public class ClientBird {
 
@@ -65,10 +66,16 @@ public class ClientBird {
     }
 
     /**
-     * PLACEHOLDER: a gentle deterministic turn so orientation, banking and interpolation can be verified on screen.
-     * The real behaviour (glide/circle modes, terrain avoidance, flocking) is ported separately.
+     * PLACEHOLDER: solo birds do a gentle deterministic turn so orientation, banking and interpolation can be
+     * verified on screen. Flock members (see {@link #flockId}) instead steer toward the flock's shared heading plus
+     * local boids (cohesion/alignment/separation, {@link FlockingRules}). The real behaviour (glide/circle modes,
+     * terrain avoidance) is still ported separately.
+     *
+     * @param flockForward the current flock's shared heading, or {@code null} for solo birds
+     * @param neighbors    candidate birds to steer relative to (only same-{@link #flockId} ones are used), or
+     *                     {@code null} for solo birds
      */
-    public void tick(World world) {
+    public void tick(World world, Vec3d flockForward, List<ClientBird> neighbors) {
         if (world == null) return;
 
         prevPos = pos;
@@ -79,12 +86,17 @@ public class ClientBird {
         ageTicks++;
 
         double maxTurnDeg = (species != null) ? species.maxTurnDegPerTick : 4.0;
-        double phase = (ageTicks + (birdSeed & 255L)) * 0.02;
-        double turnRad = Math.toRadians(maxTurnDeg) * Math.sin(phase);
 
-        double cos = Math.cos(turnRad);
-        double sin = Math.sin(turnRad);
-        vel = new Vec3d(vel.x * cos - vel.z * sin, vel.y, vel.x * sin + vel.z * cos);
+        if (flockId != 0L) {
+            vel = tickFlockHeading(flockForward, neighbors, maxTurnDeg);
+        } else {
+            double phase = (ageTicks + (birdSeed & 255L)) * 0.02;
+            double turnRad = Math.toRadians(maxTurnDeg) * Math.sin(phase);
+
+            double cos = Math.cos(turnRad);
+            double sin = Math.sin(turnRad);
+            vel = new Vec3d(vel.x * cos - vel.z * sin, vel.y, vel.x * sin + vel.z * cos);
+        }
 
         if (species != null) {
             double vy = verticalVelocity(world, species.viewForTime(world.isDaytime()));
@@ -105,6 +117,45 @@ public class ClientBird {
         pos = pos.add(vel);
 
         tickCalls(world);
+    }
+
+    /**
+     * Blends the current heading toward the flock's shared direction plus local boids steering, turn-rate limited
+     * like the solo path. Speed magnitude is preserved; only the horizontal direction changes here.
+     */
+    private Vec3d tickFlockHeading(Vec3d flockForward, List<ClientBird> neighbors, double maxTurnDeg) {
+        Vec3d currentXZ = new Vec3d(vel.x, 0, vel.z);
+        double speed = currentXZ.length();
+        if (speed < 1e-6) speed = (species != null) ? species.minSpeed : 0.4;
+
+        Vec3d desired = (flockForward != null && flockForward.lengthSquared() > 1e-8)
+            ? new Vec3d(flockForward.x, 0, flockForward.z).normalize()
+            : (currentXZ.lengthSquared() > 1e-8 ? currentXZ.normalize() : new Vec3d(0, 0, 1));
+
+        if (neighbors != null) {
+            Vec3d boids = FlockingRules.boidsSteer(this, neighbors);
+            if (boids.lengthSquared() > 1e-8) desired = desired.add(boids).normalize();
+        }
+
+        Vec3d currentDir = (currentXZ.lengthSquared() > 1e-8) ? currentXZ.normalize() : desired;
+        Vec3d newDir = limitTurnXZ(currentDir, desired, Math.toRadians(maxTurnDeg));
+
+        Vec3d scaled = newDir.scale(speed);
+        return new Vec3d(scaled.x, vel.y, scaled.z);
+    }
+
+    private static Vec3d limitTurnXZ(Vec3d currentForward, Vec3d desiredForward, double maxTurnRad) {
+        Vec3d c = currentForward.lengthSquared() > 1e-8 ? currentForward.normalize() : new Vec3d(0, 0, 1);
+        Vec3d d = desiredForward.lengthSquared() > 1e-8 ? desiredForward.normalize() : new Vec3d(0, 0, 1);
+
+        double dot = clamp(c.dotProduct(d), -1.0, 1.0);
+        double angle = Math.acos(dot);
+        if (angle <= maxTurnRad) return d;
+
+        double t = maxTurnRad / angle;
+        return c.scale(1 - t)
+            .add(d.scale(t))
+            .normalize();
     }
 
     /**
