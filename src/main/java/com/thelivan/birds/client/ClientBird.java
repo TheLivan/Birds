@@ -86,6 +86,11 @@ public class ClientBird {
         double sin = Math.sin(turnRad);
         vel = new Vec3d(vel.x * cos - vel.z * sin, vel.y, vel.x * sin + vel.z * cos);
 
+        if (species != null) {
+            double vy = verticalVelocity(world, species.viewForTime(world.isDaytime()));
+            vel = new Vec3d(vel.x, vy, vel.z);
+        }
+
         // Banking roll: based on change in forward direction (turning)
         Vec3d fNow = new Vec3d(vel.x, 0, vel.z).normalize();
         Vec3d fPrev = lastForwardXZ;
@@ -100,6 +105,41 @@ public class ClientBird {
         pos = pos.add(vel);
 
         tickCalls(world);
+    }
+
+    /**
+     * Steers {@code pos.y} toward {@code ground + preferredAboveGround}, clamped to the species' altitude band, and
+     * forces a climb if it's about to drop below the minimum. Terrain is only sampled directly below the bird (no
+     * forward look-ahead / obstacle avoidance yet), so this keeps birds cruising at a believable height without
+     * porting the full glide/circle/boids flight model.
+     */
+    private double verticalVelocity(World world, BirdSpecies.BirdSpeciesView view) {
+        double groundY = world.getHeightValue((int) Math.floor(pos.x), (int) Math.floor(pos.z));
+
+        double minAbove = view.minAltitudeAboveGround();
+        double maxAbove = view.maxAltitudeAboveGround();
+        double preferredAbove = clamp(view.preferredAboveGround(), minAbove, maxAbove);
+
+        double floorY = groundY + minAbove;
+        double ceilingY = groundY + maxAbove;
+        double targetY = groundY + preferredAbove;
+
+        // Only bias toward the floor/ceiling once we're close to violating it; otherwise cruise at the preferred band.
+        if (pos.y < floorY + 6.0) {
+            targetY = Math.max(targetY, floorY + 6.0);
+        } else if (pos.y > ceilingY - 6.0) {
+            targetY = Math.min(targetY, ceilingY - 6.0);
+        }
+
+        double yError = targetY - pos.y;
+        double vy = clamp(yError * view.verticalAdjustStrength(), -0.06, 0.06);
+
+        // Hard floor: never let the smoothed climb be too slow to clear the minimum altitude.
+        if (pos.y + vy < floorY) {
+            vy = Math.min(0.12, floorY - pos.y);
+        }
+
+        return vy;
     }
 
     private void tickCalls(World world) {
