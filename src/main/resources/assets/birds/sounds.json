@@ -1,11 +1,58 @@
 {
-	"ambient.after_great_war": {
+	"golden_eagle.single": {
 		"category": "ambient",
 		"sounds": [
-			{
-				"name": "after_great_war",
-				"stream": true
-			}
+			{ "name": "birds:golden_eagle/single/eagle1" },
+			{ "name": "birds:golden_eagle/single/eagle2" },
+			{ "name": "birds:golden_eagle/single/eale3" }
+		]
+	},
+	"golden_eagle.flock": {
+		"category": "ambient",
+		"sounds": [
+			{ "name": "birds:golden_eagle/flock/eagle1" },
+			{ "name": "birds:golden_eagle/flock/eagle2" },
+			{ "name": "birds:golden_eagle/flock/eale3" }
+		]
+	},
+	"harrier.single": {
+		"category": "ambient",
+		"sounds": [
+			{ "name": "birds:harrier/single/harrier2" },
+			{ "name": "birds:harrier/single/harrier3" },
+			{ "name": "birds:harrier/single/harrier4" },
+			{ "name": "birds:harrier/single/harrier5" },
+			{ "name": "birds:harrier/single/harris" }
+		]
+	},
+	"harrier.flock": {
+		"category": "ambient",
+		"sounds": [
+			{ "name": "birds:harrier/flock/harrier2" },
+			{ "name": "birds:harrier/flock/harrier3" },
+			{ "name": "birds:harrier/flock/harrier4" },
+			{ "name": "birds:harrier/flock/harrier5" },
+			{ "name": "birds:harrier/flock/harris" }
+		]
+	},
+	"swallow.single": {
+		"category": "ambient",
+		"sounds": [
+			{ "name": "birds:swallow/single/swallow1_mono" },
+			{ "name": "birds:swallow/single/swallow2_mono" },
+			{ "name": "birds:swallow/single/swallow3_mono" },
+			{ "name": "birds:swallow/single/swallow4_mono" },
+			{ "name": "birds:swallow/single/swallow5_mono" },
+			{ "name": "birds:swallow/single/swallow6_mono" },
+			{ "name": "birds:swallow/single/swallow7_mono" }
+		]
+	},
+	"swallow.flock": {
+		"category": "ambient",
+		"sounds": [
+			{ "name": "birds:swallow/flock/output1" },
+			{ "name": "birds:swallow/flock/output2" },
+			{ "name": "birds:swallow/flock/output3" }
 		]
 	}
 }
