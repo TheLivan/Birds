@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Random;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.biome.BiomeGenBase;
 
 import com.thelivan.birds.client.sound.BirdCallType;
 
@@ -56,9 +55,6 @@ public class BirdSpecies {
      */
     public double soundFadePower = 1.0;
 
-    public BiomeRules biomeRules = new BiomeRules();
-    public transient java.util.Set<String> resolvedWhitelistIds = new java.util.HashSet<>();
-    public transient java.util.Set<String> resolvedBlacklistIds = new java.util.HashSet<>();
     public boolean canSpawnAtDay = true;
     public boolean canSpawnAtNight = false;
 
@@ -68,7 +64,7 @@ public class BirdSpecies {
     public boolean enabled = true;
 
     /**
-     * Relative weight when multiple default_species are allowed in a biome
+     * Relative weight against the other species when picking who gets to spawn.
      */
     public double spawnWeight = 1.0;
 
@@ -95,13 +91,6 @@ public class BirdSpecies {
     public double bigFlockChanceNight = 0.10;
     public int bigFlockMin = 15;
     public int bigFlockMax = 40;
-
-    // --- Biome rules ---
-    /**
-     * Registry names like "minecraft:plains". If empty => allowed everywhere (unless blacklisted).
-     */
-    public List<String> biomeWhitelist = new ArrayList<>();
-    public List<String> biomeBlacklist = new ArrayList<>();
 
     // --- Flight (default_species-specific) ---
     public double minSpeed = 0.35;
@@ -480,40 +469,6 @@ public class BirdSpecies {
         public BirdSpecies base() {
             return base;
         }
-    }
-
-    public static class BiomeRules {
-
-        // --- Temperature numeric range (0.0..2.0 is typical in vanilla; mods may vary) ---
-        public Double temperatureMin = null;
-        public Double temperatureMax = null;
-
-        // --- Temp category (Biome.TempCategory) ---
-        // Allowed values: "OCEAN", "WARM", "MEDIUM", "COLD"
-        public java.util.List<String> temperatureCategoryWhitelist = new java.util.ArrayList<>();
-
-        // --- Simple flags ---
-        // If null -> ignored
-        public Boolean requiresRain = null;
-        public Boolean requiresSnow = null;
-
-        // Oceanic means "BiomeDictionary.Type.OCEAN" (works for modded ocean biomes too)
-        public Boolean requiresOceanic = null;
-
-        // --- Forge BiomeManager type ---
-        // Allowed values: "COOL", "WARM", "DESERT", "ICY"
-        public java.util.List<String> biomeManagerTypeWhitelist = new java.util.ArrayList<>();
-
-        // --- Forge BiomeDictionary types ---
-        // Example: "FOREST", "PLAINS", "HILLS", "MOUNTAIN", "OCEAN", "HOT", "COLD", "WET", "DRY", ...
-        public java.util.List<String> biomeDictionaryWhitelist = new java.util.ArrayList<>();
-        public java.util.List<String> biomeDictionaryBlacklist = new java.util.ArrayList<>();
-
-        // Resolved/transient sets (filled by loader so checks are fast)
-        public transient java.util.Set<BiomeGenBase.TempCategory> resolvedTempCats = new java.util.HashSet<>();
-        public transient java.util.Set<net.minecraftforge.common.BiomeManager.BiomeType> resolvedBiomeManagerTypes = new java.util.HashSet<>();
-        public transient java.util.Set<net.minecraftforge.common.BiomeDictionary.Type> resolvedDictWhitelist = new java.util.HashSet<>();
-        public transient java.util.Set<net.minecraftforge.common.BiomeDictionary.Type> resolvedDictBlacklist = new java.util.HashSet<>();
     }
 
     public static class SoundSettings {
