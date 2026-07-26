@@ -21,41 +21,6 @@ public class BirdSpecies {
     // --- Sound (per default_species) ---
     public boolean soundsEnabled = true;
 
-    /**
-     * Base pitch. 1.0 = normal.
-     */
-    public double soundPitch = 1.0;
-
-    /**
-     * Base volume multiplier. 1.0 = normal.
-     */
-    public double soundVolume = 0.8;
-
-    /**
-     * Frequency: base interval between calls in ticks (20 ticks = 1 second).
-     */
-    public int soundBaseIntervalTicks = 200; // 10 seconds
-
-    /**
-     * Randomness: 0..1. 0 = regular, 1 = very irregular (±100% jitter).
-     */
-    public double soundRandomness = 0.35;
-
-    /**
-     * Max distance (blocks) at which the call can be heard.
-     */
-    public double soundMaxDistance = 48.0;
-
-    /**
-     * Distance (blocks) at which fading begins (full volume until here).
-     */
-    public double soundFadeStart = 12.0;
-
-    /**
-     * Fade curve power. 1=linear, 2=stronger fade, 0.5=gentler fade.
-     */
-    public double soundFadePower = 1.0;
-
     public boolean canSpawnAtDay = true;
     public boolean canSpawnAtNight = false;
 
@@ -140,22 +105,6 @@ public class BirdSpecies {
     public OverrideBlock night = new OverrideBlock();
 
     public void clampAndFix() {
-
-        // Sounds
-        if (soundPitch <= 0) soundPitch = 1.0;
-        if (soundVolume < 0) soundVolume = 0.0;
-        if (soundVolume > 4.0) soundVolume = 4.0; // allow “power” but avoid insane values
-
-        if (soundBaseIntervalTicks < 20) soundBaseIntervalTicks = 20; // at least 1s
-        if (Double.isNaN(soundRandomness)) soundRandomness = 0.35;
-        soundRandomness = Math.max(0.0, Math.min(1.0, soundRandomness));
-
-        if (Double.isNaN(soundMaxDistance) || soundMaxDistance < 1.0) soundMaxDistance = 48.0;
-        if (Double.isNaN(soundFadeStart) || soundFadeStart < 0.0) soundFadeStart = 12.0;
-        if (soundFadeStart > soundMaxDistance) soundFadeStart = soundMaxDistance * 0.5;
-
-        if (Double.isNaN(soundFadePower) || soundFadePower <= 0.01) soundFadePower = 1.0;
-        if (soundFadePower > 8.0) soundFadePower = 8.0;
 
         if (glideMaxTicks < glideMinTicks) glideMaxTicks = glideMinTicks;
         if (circleMaxTicks < circleMinTicks) circleMaxTicks = circleMinTicks;

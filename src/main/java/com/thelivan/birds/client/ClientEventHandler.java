@@ -17,6 +17,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import com.thelivan.birds.client.render.RenderBird;
 import com.thelivan.birds.client.sound.BirdSoundSystem;
 import com.thelivan.birds.util.Vec3d;
+import com.thelivan.birds.util.WeightedRandom;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
@@ -231,28 +232,16 @@ public class ClientEventHandler {
     }
 
     private BirdSpecies pickSpecies(Random random, boolean isDay) {
-        List<BirdSpecies> all = BirdSpeciesRegistry.ALL;
-
         List<BirdSpecies> allowed = new ArrayList<>();
-        double totalWeight = 0.0;
-        for (BirdSpecies s : all) {
+        for (BirdSpecies s : BirdSpeciesRegistry.ALL) {
             if (s.spawnWeight <= 0) continue;
             if (isDay && !s.canSpawnAtDay) continue;
             if (!isDay && !s.canSpawnAtNight) continue;
 
             allowed.add(s);
-            totalWeight += s.spawnWeight;
-        }
-        if (allowed.isEmpty()) return null;
-
-        double pick = random.nextDouble() * totalWeight;
-        double acc = 0.0;
-        for (BirdSpecies s : allowed) {
-            acc += s.spawnWeight;
-            if (pick < acc) return s;
         }
 
-        return allowed.get(allowed.size() - 1);
+        return WeightedRandom.pick(allowed, s -> s.spawnWeight, random);
     }
 
     /** Deterministic hash of up to 5 longs into a single seed (murmur3-style finalizer over XOR-folded inputs). */
