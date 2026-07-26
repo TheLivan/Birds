@@ -47,7 +47,7 @@ public class ClientBird {
     private double circleRadius;
 
     public ClientBird(BirdSpecies species, long birdSeed, Vec3d startPos, Vec3d initialDir, double speed) {
-        this.species = species;
+        this.species = (species != null) ? species : BirdSpecies.DEFAULT;
         this.birdSeed = birdSeed;
         this.callRandom = new Random(birdSeed ^ 0xC411L);
         this.flightRandom = new Random(birdSeed ^ 0x9E3779B1L);
@@ -60,7 +60,7 @@ public class ClientBird {
         this.vel = forward.scale(speed);
         this.lastForwardXZ = new Vec3d(forward.x, 0, forward.z).normalize();
 
-        this.texture = (species != null) ? species.pickTexture(birdSeed) : null;
+        this.texture = this.species.pickTexture(birdSeed);
 
         pickNewMode();
     }
@@ -75,7 +75,7 @@ public class ClientBird {
 
         ageTicks++;
 
-        double maxTurnDeg = (species != null) ? species.maxTurnDegPerTick : 4.0;
+        double maxTurnDeg = species.maxTurnDegPerTick;
 
         if (flockId != 0L) {
             vel = tickFlockHeading(flockForward, neighbors, maxTurnDeg);
@@ -85,10 +85,8 @@ public class ClientBird {
 
         vel = avoidObstacles(world, maxTurnDeg);
 
-        if (species != null) {
-            double vy = verticalVelocity(world, species.viewForTime(world.isDaytime()));
-            vel = new Vec3d(vel.x, vy, vel.z);
-        }
+        double vy = verticalVelocity(world, species.viewForTime(world.isDaytime()));
+        vel = new Vec3d(vel.x, vy, vel.z);
 
         Vec3d fNow = new Vec3d(vel.x, 0, vel.z).normalize();
         Vec3d fPrev = lastForwardXZ;
@@ -108,7 +106,7 @@ public class ClientBird {
     private Vec3d tickFlockHeading(Vec3d flockForward, Collection<ClientBird> neighbors, double maxTurnDeg) {
         Vec3d currentXZ = new Vec3d(vel.x, 0, vel.z);
         double speed = currentXZ.length();
-        if (speed < 1e-6) speed = (species != null) ? species.minSpeed : 0.4;
+        if (speed < 1e-6) speed = species.minSpeed;
 
         Vec3d desired = (flockForward != null && flockForward.lengthSquared() > 1e-8)
             ? new Vec3d(flockForward.x, 0, flockForward.z).normalize()
@@ -170,7 +168,7 @@ public class ClientBird {
 
         Vec3d desired = desiredSoloDirection();
 
-        double noise = (species != null) ? species.noiseStrength : 0.04;
+        double noise = species.noiseStrength;
         desired = desired.add((flightRandom.nextDouble() - 0.5) * noise, 0, (flightRandom.nextDouble() - 0.5) * noise);
         if (desired.lengthSquared() > 1e-8) desired = desired.normalize();
 
@@ -178,8 +176,8 @@ public class ClientBird {
         Vec3d currentDir = (currentXZ.lengthSquared() > 1e-8) ? currentXZ.normalize() : desired;
         Vec3d newDir = limitTurnXZ(currentDir, desired, Math.toRadians(maxTurnDeg));
 
-        double minSpeed = (species != null) ? species.minSpeed : 0.35;
-        double maxSpeed = (species != null) ? species.maxSpeed : 0.6;
+        double minSpeed = species.minSpeed;
+        double maxSpeed = species.maxSpeed;
         double targetSpeed = (mode == Mode.CIRCLE) ? lerp(minSpeed, maxSpeed, 0.35) : lerp(minSpeed, maxSpeed, 0.65);
 
         double speed = currentXZ.length();
@@ -217,8 +215,8 @@ public class ClientBird {
     }
 
     private void pickNewMode() {
-        double weightGlide = (species != null) ? species.patternWeightGlide : 0.55;
-        double weightCircle = (species != null) ? species.patternWeightCircle : 0.45;
+        double weightGlide = species.patternWeightGlide;
+        double weightCircle = species.patternWeightCircle;
         double sum = weightGlide + weightCircle;
         if (sum <= 0) {
             weightGlide = 1.0;
@@ -229,21 +227,14 @@ public class ClientBird {
 
         if (chooseCircle) {
             mode = Mode.CIRCLE;
-            modeTicksLeft = randInt(
-                (species != null) ? species.circleMinTicks : 80,
-                (species != null) ? species.circleMaxTicks : 220);
-            circleRadius = lerp(
-                (species != null) ? species.circleRadiusMin : 16.0,
-                (species != null) ? species.circleRadiusMax : 64.0,
-                flightRandom.nextDouble());
+            modeTicksLeft = randInt(species.circleMinTicks, species.circleMaxTicks);
+            circleRadius = lerp(species.circleRadiusMin, species.circleRadiusMax, flightRandom.nextDouble());
 
             double ang = flightRandom.nextDouble() * Math.PI * 2.0;
             circleCenter = new Vec3d(pos.x + Math.cos(ang) * circleRadius, pos.y, pos.z + Math.sin(ang) * circleRadius);
         } else {
             mode = Mode.GLIDE;
-            modeTicksLeft = randInt(
-                (species != null) ? species.glideMinTicks : 60,
-                (species != null) ? species.glideMaxTicks : 140);
+            modeTicksLeft = randInt(species.glideMinTicks, species.glideMaxTicks);
             pickGlideWaypoint();
         }
     }
@@ -317,8 +308,6 @@ public class ClientBird {
     }
 
     private void tickCalls(World world) {
-        if (species == null) return;
-
         BirdSpecies.BirdSpeciesView view = species.viewForTime(world.isDaytime());
         if (!view.soundsEnabled()) return;
 

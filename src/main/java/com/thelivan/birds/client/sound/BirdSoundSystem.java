@@ -34,7 +34,6 @@ public final class BirdSoundSystem {
         if (mc == null || mc.theWorld == null || mc.thePlayer == null) return;
 
         BirdSpecies species = bird.species;
-        if (species == null || species.folderName == null) return;
 
         long birdId = bird.getId();
         BirdCallSound existing = ACTIVE.get(birdId);

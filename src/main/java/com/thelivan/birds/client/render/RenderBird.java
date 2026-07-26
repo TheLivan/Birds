@@ -84,7 +84,7 @@ public class RenderBird {
         GL11.glPushMatrix();
         GL11.glTranslated(x, y, z);
 
-        double scale = (b.species != null) ? b.species.scale : 0.45;
+        double scale = b.species.scale;
         GL11.glScaled(scale, scale, scale);
 
         // Anti-invisibility trick: tilt the quad slightly toward the camera.
@@ -136,8 +136,8 @@ public class RenderBird {
 
         // Small "flap" / wing wobble: vary width slightly
         double t = mc.theWorld.getTotalWorldTime() + partialTicks;
-        double amp = (b.species != null) ? b.species.flapAmplitude : 0.08;
-        double spd = (b.species != null) ? b.species.flapSpeed : 0.35;
+        double amp = b.species.flapAmplitude;
+        double spd = b.species.flapSpeed;
         double flap = amp * Math.sin((t + (b.getId() & 255L)) * spd);
 
         double halfW = 1.2 + flap; // wings (left-right, X)

@@ -194,6 +194,21 @@ public class BirdSpecies {
         return new BirdSpeciesView(this, o);
     }
 
+    /**
+     * Null-object fallback for code that's handed a possibly-null species (defensive only — real birds always come
+     * from {@code BirdSpeciesRegistry}). Uses this class's own field defaults; silent and textureless so a caller
+     * that hits this path fails safe (no sound, no render) instead of crashing.
+     */
+    public static final BirdSpecies DEFAULT = defaultSpecies();
+
+    private static BirdSpecies defaultSpecies() {
+        BirdSpecies s = new BirdSpecies();
+        s.name = "Default";
+        s.soundsEnabled = false;
+        s.clampAndFix();
+        return s;
+    }
+
     public static Builder builder(String name, String folderName) {
         return new Builder(name, folderName);
     }
