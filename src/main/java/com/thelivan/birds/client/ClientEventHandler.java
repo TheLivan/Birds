@@ -29,7 +29,6 @@ public class ClientEventHandler {
 
     private static final int TARGET_BIRD_COUNT = 20;
     private static final int SPAWN_RADIUS = 80;
-    private static final int SPAWN_ALTITUDE = 40;
     private static final double DESPAWN_BORDER_BUFFER = 32.0;
 
     private final List<ClientBird> birds = new ArrayList<>();
@@ -76,15 +75,23 @@ public class ClientEventHandler {
     private ClientBird spawnBird(World world, EntityPlayer player) {
         int x = (int) player.posX + rnd.nextInt(SPAWN_RADIUS * 2) - SPAWN_RADIUS;
         int z = (int) player.posZ + rnd.nextInt(SPAWN_RADIUS * 2) - SPAWN_RADIUS;
-        double y = world.getHeightValue(x, z) + SPAWN_ALTITUDE;
+
+        BirdSpecies species = pickSpecies();
+
+        double groundY = world.getHeightValue(x, z);
+        double above = clamp(species.preferredAboveGround, species.minAltitudeAboveGround, species.maxAltitudeAboveGround);
+        double y = groundY + above;
 
         double angle = rnd.nextDouble() * Math.PI * 2.0;
         Vec3d dir = new Vec3d(Math.cos(angle), 0.0, Math.sin(angle));
 
-        BirdSpecies species = pickSpecies();
         double speed = species.minSpeed + rnd.nextDouble() * (species.maxSpeed - species.minSpeed);
 
         return new ClientBird(world, species, rnd.nextLong(), new Vec3d(x, y, z), dir, speed);
+    }
+
+    private static double clamp(double v, double lo, double hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 
     private BirdSpecies pickSpecies() {
