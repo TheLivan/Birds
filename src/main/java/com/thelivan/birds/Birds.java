@@ -10,7 +10,7 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
-@Mod(modid = "birds", name = "Birds", version = Tags.VERSION)
+@Mod(modid = "birds", name = "Birds", version = Tags.VERSION, acceptableRemoteVersions = "*")
 public class Birds {
 
     public static final String MODID = "birds";
