@@ -1,7 +1,8 @@
 # Birds
 > **Original mod:** this is a 1.7.10 port of [Jubitus-Birds](https://github.com/G1ll0u/Jubitus-Birds) by [G1ll0u](https://github.com/G1ll0u).
 
-![alt text](img/image1.png "")
+![Golden eagle over a forest](img/golden_eagle.png)
+![Northern harrier over plains](img/harrier.png)
 
 ## SAST Tools
 
