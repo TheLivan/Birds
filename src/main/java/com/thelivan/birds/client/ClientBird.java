@@ -114,7 +114,8 @@ public class ClientBird {
 
         if (neighbors != null) {
             Vec3d boids = FlockingRules.boidsSteer(this, neighbors);
-            if (boids.lengthSquared() > 1e-8) desired = desired.add(boids).normalize();
+            if (boids.lengthSquared() > 1e-8) desired = desired.add(boids)
+                .normalize();
         }
 
         Vec3d currentDir = (currentXZ.lengthSquared() > 1e-8) ? currentXZ.normalize() : desired;
@@ -155,7 +156,8 @@ public class ClientBird {
 
         boolean steerLeft = (birdSeed & 2L) == 0L;
         Vec3d side = steerLeft ? new Vec3d(-dirXZ.z, 0, dirXZ.x) : new Vec3d(dirXZ.z, 0, -dirXZ.x);
-        Vec3d avoidDir = dirXZ.add(side.scale(0.8)).normalize();
+        Vec3d avoidDir = dirXZ.add(side.scale(0.8))
+            .normalize();
 
         Vec3d newDir = limitTurnXZ(dirXZ, avoidDir, Math.toRadians(maxTurnDeg * 1.25));
 

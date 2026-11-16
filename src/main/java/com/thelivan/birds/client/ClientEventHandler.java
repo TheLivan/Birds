@@ -66,15 +66,14 @@ public class ClientEventHandler {
         double despawnDist = MC.gameSettings.renderDistanceChunks * 16.0 + DESPAWN_BORDER_BUFFER;
         double despawnDist2 = despawnDist * despawnDist;
 
-        Iterator<Map.Entry<Long, ClientBird>> it = birds.entrySet().iterator();
+        Iterator<Map.Entry<Long, ClientBird>> it = birds.entrySet()
+            .iterator();
         while (it.hasNext()) {
             ClientBird bird = it.next()
                 .getValue();
 
-            Vec3d flockForward = (bird.flockId != 0L && flocks.containsKey(bird.flockId))
-                ? flocks.get(bird.flockId)
-                    .getGroupForward()
-                : null;
+            Vec3d flockForward = (bird.flockId != 0L && flocks.containsKey(bird.flockId)) ? flocks.get(bird.flockId)
+                .getGroupForward() : null;
 
             bird.tick(world, flockForward, birds.values());
 
@@ -130,7 +129,8 @@ public class ClientEventHandler {
         }
     }
 
-    private ClientBird spawnSoloBird(World world, EntityPlayer player, Random random, BirdSpecies species, long birdId) {
+    private ClientBird spawnSoloBird(World world, EntityPlayer player, Random random, BirdSpecies species,
+        long birdId) {
         double angle = random.nextDouble() * Math.PI * 2.0;
         double spawnDist = viewBorder() + SPAWN_BORDER_BUFFER + random.nextDouble() * 64.0;
 
@@ -138,7 +138,10 @@ public class ClientEventHandler {
         int z = (int) Math.floor(player.posZ + Math.sin(angle) * spawnDist);
 
         double groundY = world.getHeightValue(x, z);
-        double above = clamp(species.preferredAboveGround, species.minAltitudeAboveGround, species.maxAltitudeAboveGround);
+        double above = clamp(
+            species.preferredAboveGround,
+            species.minAltitudeAboveGround,
+            species.maxAltitudeAboveGround);
         Vec3d pos = new Vec3d(x, groundY + above, z);
 
         Vec3d dir = inwardDirection(angle, random);
@@ -147,15 +150,18 @@ public class ClientEventHandler {
         return new ClientBird(species, birdId, pos, dir, speed);
     }
 
-    private void spawnFlockForCell(World world, EntityPlayer player, long cellSeed, Random cellRandom, BirdSpecies species,
-        boolean isDay) {
+    private void spawnFlockForCell(World world, EntityPlayer player, long cellSeed, Random cellRandom,
+        BirdSpecies species, boolean isDay) {
         double angle = cellRandom.nextDouble() * Math.PI * 2.0;
         double spawnDist = viewBorder() + SPAWN_BORDER_BUFFER + cellRandom.nextDouble() * 64.0;
 
         double sx = player.posX + Math.cos(angle) * spawnDist;
         double sz = player.posZ + Math.sin(angle) * spawnDist;
         double groundY = world.getHeightValue((int) Math.floor(sx), (int) Math.floor(sz));
-        double above = clamp(species.preferredAboveGround, species.minAltitudeAboveGround, species.maxAltitudeAboveGround);
+        double above = clamp(
+            species.preferredAboveGround,
+            species.minAltitudeAboveGround,
+            species.maxAltitudeAboveGround);
         Vec3d center = new Vec3d(sx, groundY + above, sz);
 
         Vec3d baseDir = inwardDirection(angle, cellRandom);
@@ -171,7 +177,8 @@ public class ClientEventHandler {
             long birdId = mixSeed(cellSeed, i, 2, 0, 0);
             if (birds.containsKey(birdId)) continue;
 
-            double spread = (size <= 10) ? (3.0 + cellRandom.nextDouble() * 8.0) : (6.0 + cellRandom.nextDouble() * 18.0);
+            double spread = (size <= 10) ? (3.0 + cellRandom.nextDouble() * 8.0)
+                : (6.0 + cellRandom.nextDouble() * 18.0);
             double a = cellRandom.nextDouble() * Math.PI * 2.0;
             Vec3d offset = new Vec3d(Math.cos(a) * spread, (cellRandom.nextDouble() - 0.5) * 3.0, Math.sin(a) * spread);
             Vec3d pos = center.add(offset);
