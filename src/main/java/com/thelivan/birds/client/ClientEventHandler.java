@@ -125,7 +125,8 @@ public class ClientEventHandler {
                 if (birds.containsKey(birdId)) continue;
                 if (birds.size() >= TARGET_BIRD_COUNT) return;
 
-                birds.put(birdId, spawnSoloBird(world, player, cellRandom, species, birdId));
+                ClientBird bird = spawnSoloBird(world, player, cellRandom, species, birdId);
+                if (bird != null) birds.put(birdId, bird);
             }
         }
     }
@@ -133,7 +134,12 @@ public class ClientEventHandler {
     private ClientBird spawnSoloBird(World world, EntityPlayer player, Random random, BirdSpecies species,
         long birdId) {
         double angle = random.nextDouble() * Math.PI * 2.0;
-        double spawnDist = viewBorder() + SPAWN_BORDER_BUFFER + random.nextDouble() * 64.0;
+        double spawnDist = loadedSpawnDist(
+            world,
+            player,
+            angle,
+            viewBorder() + SPAWN_BORDER_BUFFER + random.nextDouble() * 64.0);
+        if (spawnDist < 0) return null;
 
         int x = (int) Math.floor(player.posX + Math.cos(angle) * spawnDist);
         int z = (int) Math.floor(player.posZ + Math.sin(angle) * spawnDist);
@@ -154,7 +160,12 @@ public class ClientEventHandler {
     private void spawnFlockForCell(World world, EntityPlayer player, long cellSeed, Random cellRandom,
         BirdSpecies species, boolean isDay) {
         double angle = cellRandom.nextDouble() * Math.PI * 2.0;
-        double spawnDist = viewBorder() + SPAWN_BORDER_BUFFER + cellRandom.nextDouble() * 64.0;
+        double spawnDist = loadedSpawnDist(
+            world,
+            player,
+            angle,
+            viewBorder() + SPAWN_BORDER_BUFFER + cellRandom.nextDouble() * 64.0);
+        if (spawnDist < 0) return;
 
         double sx = player.posX + Math.cos(angle) * spawnDist;
         double sz = player.posZ + Math.sin(angle) * spawnDist;
@@ -195,6 +206,16 @@ public class ClientEventHandler {
 
             flocks.computeIfAbsent(flockId, id -> new Flock(id, baseDir));
         }
+    }
+
+    private static double loadedSpawnDist(World world, EntityPlayer player, double angle, double dist) {
+        for (double d = dist; d >= viewBorder(); d -= 8.0) {
+            int x = (int) Math.floor(player.posX + Math.cos(angle) * d);
+            int z = (int) Math.floor(player.posZ + Math.sin(angle) * d);
+            if (!world.getChunkFromBlockCoords(x, z)
+                .isEmpty()) return d;
+        }
+        return -1;
     }
 
     private static double viewBorder() {
