@@ -1,5 +1,5 @@
 # Birds
-Upgrade of the Jubitus birds mod to 1.7.10
+> **Original mod:** this is a 1.7.10 port of [Jubitus-Birds](https://github.com/G1ll0u/Jubitus-Birds) by [G1ll0u](https://github.com/G1ll0u).
 
 ![alt text](img/image1.png "")
 
