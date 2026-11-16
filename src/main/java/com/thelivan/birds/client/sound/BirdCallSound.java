@@ -26,6 +26,7 @@ public class BirdCallSound implements ITickableSound {
     private final float maxDist;
     private final float fadeStart;
     private final float fadePower;
+    private final int startTick;
 
     private float xPosF;
     private float yPosF;
@@ -37,7 +38,7 @@ public class BirdCallSound implements ITickableSound {
     private int outOfRangeTicks = 0;
 
     public BirdCallSound(ClientBird bird, ResourceLocation location, float volume, float pitch, float maxDist,
-        float fadeStart, float fadePower) {
+        float fadeStart, float fadePower, int startTick) {
         this.bird = bird;
         this.birdId = bird.getId();
         this.location = location;
@@ -47,6 +48,7 @@ public class BirdCallSound implements ITickableSound {
         this.maxDist = Math.max(0.001f, maxDist);
         this.fadeStart = Math.max(0f, Math.min(fadeStart, this.maxDist));
         this.fadePower = Math.max(0.01f, fadePower);
+        this.startTick = startTick;
 
         this.xPosF = (float) bird.pos.x;
         this.yPosF = (float) bird.pos.y;
@@ -95,6 +97,10 @@ public class BirdCallSound implements ITickableSound {
 
     public long getBirdId() {
         return birdId;
+    }
+
+    public int getStartTick() {
+        return startTick;
     }
 
     @Override

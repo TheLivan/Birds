@@ -20,6 +20,8 @@ import com.thelivan.birds.client.ClientBird;
 public final class BirdSoundSystem {
 
     private static final int MAX_STARTS_PER_TICK = 4;
+    // The sound engine starts streams asynchronously; allow a few ticks before treating "not playing" as stale.
+    private static final int STARTUP_GRACE_TICKS = 5;
 
     private static final Map<Long, BirdCallSound> ACTIVE = new ConcurrentHashMap<>();
     private static final Random RANDOM = new Random();
@@ -33,18 +35,30 @@ public final class BirdSoundSystem {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.theWorld == null || mc.thePlayer == null) return;
 
+        SoundHandler sh = mc.getSoundHandler();
         BirdSpecies species = bird.species;
 
         long birdId = bird.getId();
+        int tick = (int) mc.theWorld.getTotalWorldTime();
+
+        // A one-shot sound disappears from the engine when the ogg ends, while isDonePlaying() only flips for the
+        // out-of-range case. Check the engine itself, otherwise a bird stays stuck on its first (already finished)
+        // call forever.
         BirdCallSound existing = ACTIVE.get(birdId);
-        if (existing != null && !existing.isDonePlaying()) return;
+        if (existing != null) {
+            if (sh.isSoundPlaying(existing)) return;
+
+            if (tick - existing.getStartTick() < STARTUP_GRACE_TICKS && !existing.isDonePlaying()) return;
+
+            ACTIVE.remove(birdId);
+            sh.stopSound(existing); // no-op for a naturally finished sound, frees one stuck while starting
+        }
 
         double maxDist = sound.soundMaxDistance();
         if (bird.pos.squareDistanceTo(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ) > maxDist * maxDist) {
             return;
         }
 
-        int tick = (int) mc.theWorld.getTotalWorldTime();
         if (tick != lastTick) {
             lastTick = tick;
             startedThisTick = 0;
@@ -64,13 +78,13 @@ public final class BirdSoundSystem {
             pitch,
             (float) sound.soundMaxDistance(),
             (float) sound.soundFadeStart(),
-            (float) sound.soundFadePower());
+            (float) sound.soundFadePower(),
+            tick);
 
         ACTIVE.put(birdId, call);
         startedThisTick++;
 
-        mc.getSoundHandler()
-            .playSound(call);
+        sh.playSound(call);
     }
 
     public static void stopForBird(long birdId) {
@@ -98,11 +112,26 @@ public final class BirdSoundSystem {
     }
 
     /**
-     * Drops finished entries so a bird that stops calling (interval elapsed once, never re-triggered) doesn't keep a
-     * dead {@link BirdCallSound} pinned in the map forever.
+     * Drops finished/stale entries so a bird that stops calling doesn't keep a dead {@link BirdCallSound} pinned in the
+     * map forever, and so a finished call never blocks the bird's next one.
      */
     public static void purgeFinished() {
-        ACTIVE.values()
-            .removeIf(BirdCallSound::isDonePlaying);
+        Minecraft mc = Minecraft.getMinecraft();
+        SoundHandler sh = (mc != null) ? mc.getSoundHandler() : null;
+
+        if (sh == null || mc.theWorld == null) {
+            ACTIVE.values()
+                .removeIf(BirdCallSound::isDonePlaying);
+            return;
+        }
+
+        int tick = (int) mc.theWorld.getTotalWorldTime();
+        ACTIVE.entrySet()
+            .removeIf(entry -> {
+                BirdCallSound call = entry.getValue();
+                if (call.isDonePlaying()) return true;
+                if (sh.isSoundPlaying(call)) return false;
+                return tick - call.getStartTick() >= STARTUP_GRACE_TICKS;
+            });
     }
 }
