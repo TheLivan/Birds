@@ -93,6 +93,8 @@ public class ClientEventHandler {
     }
 
     private void spawnAroundPlayer(World world, EntityPlayer player) {
+        if (world.provider.hasNoSky) return;
+
         long worldSeed = world.getSeed();
         int dim = world.provider.dimensionId;
         long window = world.getTotalWorldTime() / SPAWN_TIME_WINDOW_TICKS;
