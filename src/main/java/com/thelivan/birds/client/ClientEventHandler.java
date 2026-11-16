@@ -41,7 +41,7 @@ public class ClientEventHandler {
 
     private final Map<Long, ClientBird> birds = new HashMap<>();
     private final Map<Long, Flock> flocks = new HashMap<>();
-    private boolean wasInWorld = false;
+    private World lastWorld = null;
 
     private ClientEventHandler() {}
 
@@ -52,14 +52,13 @@ public class ClientEventHandler {
         World world = MC.theWorld;
         EntityPlayer player = MC.thePlayer;
 
-        if (world == null || player == null) {
+        if (world != lastWorld) {
             birds.clear();
             flocks.clear();
-            if (wasInWorld) BirdSoundSystem.stopAll();
-            wasInWorld = false;
-            return;
+            if (lastWorld != null) BirdSoundSystem.stopAll();
+            lastWorld = world;
         }
-        wasInWorld = true;
+        if (world == null || player == null) return;
 
         for (Flock flock : flocks.values()) flock.tick();
 
